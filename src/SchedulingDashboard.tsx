@@ -115,7 +115,7 @@ export default function SchedulingDashboard() {
 
   return (
     <div style={st.wrap}>
-      <h1 style={{ color: '#2affe0' }}>🗓 Work Scheduling &amp; Roadmap</h1>
+      <h1 style={{ color: '#2affe0' }}>🗓 Work Scheduling & Roadmap</h1>
       {status && <div style={{ ...st.panel, color: 'lime', padding: '10px 16px' }}>{status}</div>}
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>

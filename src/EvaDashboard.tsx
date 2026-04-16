@@ -136,7 +136,7 @@ export default function EvaDashboard() {
 
       {/* ── Filed EVA Plans + Checklist ─────── */}
       <div style={panelStyle}>
-        <h2 style={{ color: '#ff5c5c', marginTop: 0 }}>Filed Plans &amp; Checklists</h2>
+        <h2 style={{ color: '#ff5c5c', marginTop: 0 }}>Filed Plans & Checklists</h2>
         {plans.length === 0 && <p style={{ color: '#666' }}>No EVA plans on record.</p>}
         {plans.map(plan => (
           <div key={plan.id} style={{ background: '#111827', borderRadius: '8px', padding: '16px', marginBottom: '16px', border: `1px solid ${plan.status === 'GO' ? '#00ff7f' : '#333'}` }}>
