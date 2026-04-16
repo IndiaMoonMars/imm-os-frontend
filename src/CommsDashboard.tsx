@@ -70,13 +70,13 @@ export default function CommsDashboard() {
     }
   }
 
-  const s: Record<string, React.CSSProperties> = {
-    wrap: { padding: '20px', color: '#e6f0ff', background: '#0d1117', minHeight: '100%', fontFamily: "'Inter', sans-serif" },
-    panel: { background: '#1a2133', border: '1px solid #2a7fff33', borderRadius: '10px', padding: '18px', marginBottom: '18px' },
-    input: { width: '100%', padding: '9px 12px', background: '#0d1117', color: '#e6f0ff', border: '1px solid #2a7fff55', borderRadius: '6px', marginBottom: '10px', boxSizing: 'border-box' as const, fontSize: '14px' },
-    btn: (c = '#2a7fff'): React.CSSProperties => ({ padding: '9px 20px', background: c, color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' }),
-    tag: (c: string): React.CSSProperties => ({ padding: '2px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 700, background: c + '22', color: c, border: `1px solid ${c}55` })
+  const st = {
+    wrap: { padding: '20px', color: '#e6f0ff', background: '#0d1117', minHeight: '100%', fontFamily: "'Inter', sans-serif" } as React.CSSProperties,
+    panel: { background: '#1a2133', border: '1px solid #2a7fff33', borderRadius: '10px', padding: '18px', marginBottom: '18px' } as React.CSSProperties,
+    input: { width: '100%', padding: '9px 12px', background: '#0d1117', color: '#e6f0ff', border: '1px solid #2a7fff55', borderRadius: '6px', marginBottom: '10px', boxSizing: 'border-box' as const, fontSize: '14px' } as React.CSSProperties,
   }
+  const btn = (c = '#2a7fff'): React.CSSProperties => ({ padding: '9px 20px', background: c, color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' })
+  const tag = (c: string): React.CSSProperties => ({ padding: '2px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 700, background: c + '22', color: c, border: `1px solid ${c}55` })
 
   const fmtCountdown = (s: number) => {
     if (s < 60) return `${s.toFixed(0)}s`
@@ -84,13 +84,13 @@ export default function CommsDashboard() {
   }
 
   return (
-    <div style={s.wrap}>
+    <div style={st.wrap}>
       <h1 style={{ color: '#2a7fff' }}>📡 Crew Communications</h1>
-      {status && <div style={{ ...s.panel, color: 'lime', padding: '10px 16px' }}>{status}</div>}
+      {status && <div style={{ ...st.panel, color: 'lime', padding: '10px 16px' }}>{status}</div>}
 
       {/* Outbox countdown HUD */}
       {pending.length > 0 && (
-        <div style={s.panel}>
+        <div style={st.panel}>
           <div style={{ color: '#ffaa00', fontWeight: 700, marginBottom: '8px' }}>⏱ OUTBOUND — COMM DELAY QUEUE</div>
           {pending.map(p => (
             <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #333' }}>
@@ -105,17 +105,17 @@ export default function CommsDashboard() {
 
       {/* Tab nav */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '18px' }}>
-        <button style={s.btn(view === 'inbox' ? '#2a7fff' : '#333')} onClick={() => setView('inbox')}>📥 Inbox</button>
-        <button style={s.btn(view === 'compose' ? '#2a7fff' : '#333')} onClick={() => setView('compose')}>✏️ Compose</button>
-        <select value={group} onChange={e => setGroup(e.target.value as any)}
-          style={{ ...s.input, width: 'auto', marginBottom: 0, marginLeft: 'auto' }}>
+        <button style={btn(view === 'inbox' ? '#2a7fff' : '#333')} onClick={() => setView('inbox')}>📥 Inbox</button>
+        <button style={btn(view === 'compose' ? '#2a7fff' : '#333')} onClick={() => setView('compose')}>✏️ Compose</button>
+        <select value={group} onChange={e => setGroup(e.target.value as 'astro' | 'mcc')}
+          style={{ ...st.input, width: 'auto', marginBottom: 0, marginLeft: 'auto' }}>
           <option value="mcc">MCC Inbox</option>
           <option value="astro">Astro Inbox</option>
         </select>
       </div>
 
       {view === 'inbox' && (
-        <div style={s.panel}>
+        <div style={st.panel}>
           <div style={{ color: '#aaa', fontWeight: 600, marginBottom: '12px' }}>
             {inbox.length} message{inbox.length !== 1 ? 's' : ''} delivered
           </div>
@@ -124,7 +124,7 @@ export default function CommsDashboard() {
             <div key={m.id} style={{ borderBottom: '1px solid #2a3045', padding: '12px 0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <span style={{ fontWeight: 700 }}>{m.subject || '(no subject)'}</span>
-                <span style={s.tag('#2affe0')}>Mission Day {m.mission_day}</span>
+                <span style={tag('#2affe0')}>Mission Day {m.mission_day}</span>
               </div>
               <div style={{ color: '#aaa', fontSize: '13px', marginBottom: '6px' }}>
                 From: <span style={{ color: '#5cbcff' }}>{m.sender_id}</span>
@@ -136,22 +136,22 @@ export default function CommsDashboard() {
       )}
 
       {view === 'compose' && (
-        <div style={s.panel}>
+        <div style={st.panel}>
           <h2 style={{ color: '#ffaa00', marginTop: 0 }}>New Message</h2>
           <label style={{ fontSize: '13px', color: '#aaa' }}>To</label>
-          <select style={s.input} value={compose.recipient_group}
+          <select style={st.input} value={compose.recipient_group}
             onChange={e => setCompose({ ...compose, recipient_group: e.target.value })}>
             <option value="mcc">Mission Control Centre (MCC)</option>
             <option value="astro">Crew (All Astronauts)</option>
             <option value="all">All (Crew + MCC)</option>
           </select>
           <label style={{ fontSize: '13px', color: '#aaa' }}>Subject</label>
-          <input style={s.input} value={compose.subject}
+          <input style={st.input} value={compose.subject}
             onChange={e => setCompose({ ...compose, subject: e.target.value })} placeholder="Subject…" />
           <label style={{ fontSize: '13px', color: '#aaa' }}>Message</label>
-          <textarea rows={6} style={s.input} value={compose.body}
+          <textarea rows={6} style={st.input} value={compose.body}
             onChange={e => setCompose({ ...compose, body: e.target.value })} placeholder="Type your message…" />
-          <button style={s.btn()} onClick={sendMessage}>TRANSMIT</button>
+          <button style={btn()} onClick={sendMessage}>TRANSMIT</button>
         </div>
       )}
     </div>

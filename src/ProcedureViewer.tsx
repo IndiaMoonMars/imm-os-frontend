@@ -77,11 +77,11 @@ export default function ProcedureViewer() {
     setStatus('Procedure aborted.')
   }
 
-  const s: Record<string, React.CSSProperties> = {
-    wrap: { padding: fullscreen ? '0' : '20px', color: '#e6f0ff', background: fullscreen ? '#000' : '#0d1117', minHeight: '100%', fontFamily: "'Inter', sans-serif" },
-    panel: { background: '#1a2133', border: '1px solid #2a7fff33', borderRadius: '10px', padding: '18px', marginBottom: '18px' },
-    btn: (c = '#2a7fff'): React.CSSProperties => ({ padding: '10px 22px', background: c, color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' }),
+  const st = {
+    wrap: { padding: fullscreen ? '0' : '20px', color: '#e6f0ff', background: fullscreen ? '#000' : '#0d1117', minHeight: '100%', fontFamily: "'Inter', sans-serif" } as React.CSSProperties,
+    panel: { background: '#1a2133', border: '1px solid #2a7fff33', borderRadius: '10px', padding: '18px', marginBottom: '18px' } as React.CSSProperties,
   }
+  const btn = (c = '#2a7fff'): React.CSSProperties => ({ padding: '10px 22px', background: c, color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' })
 
   // ── Fullscreen step viewer ───────────────────────────────────────
   if (fullscreen && run) {
@@ -107,7 +107,7 @@ export default function ProcedureViewer() {
               </div>
               <div style={{ fontSize: '13px', color: '#aaa' }}>STEPS COMPLETE</div>
             </div>
-            <button style={s.btn('#ff5c5c')} onClick={abortRun}>⛔ ABORT</button>
+            <button style={btn('#ff5c5c')} onClick={abortRun}>⛔ ABORT</button>
           </div>
         </div>
 
@@ -169,18 +169,18 @@ export default function ProcedureViewer() {
 
   // ── Procedure Library ────────────────────────────────────────────
   return (
-    <div style={s.wrap}>
+    <div style={st.wrap}>
       <h1 style={{ color: '#ff5c5c' }}>📋 Procedure Library</h1>
-      {status && <div style={{ ...s.panel, color: 'lime', padding: '10px 16px' }}>{status}</div>}
+      {status && <div style={{ ...st.panel, color: 'lime', padding: '10px 16px' }}>{status}</div>}
       {run && run.status === 'IN_PROGRESS' && (
-        <div style={{ ...s.panel, border: '2px solid #2a7fff' }}>
+        <div style={{ ...st.panel, border: '2px solid #2a7fff' }}>
           <span style={{ color: '#2a7fff', fontWeight: 700 }}>▶ Active run: {run.procedure_name} — {run.progress_pct}% complete</span>
-          <button style={{ ...s.btn(), marginLeft: '16px' }} onClick={() => setFullscreen(true)}>Resume →</button>
+          <button style={{ ...btn(), marginLeft: '16px' }} onClick={() => setFullscreen(true)}>Resume →</button>
         </div>
       )}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
         {procedures.map(proc => (
-          <div key={proc.id} style={{ ...s.panel, minWidth: '280px', maxWidth: '360px' }}>
+          <div key={proc.id} style={{ ...st.panel, minWidth: '280px', maxWidth: '360px' }}>
             <div style={{ color: '#ff5c5c', fontSize: '12px', fontWeight: 700, letterSpacing: '1px', marginBottom: '6px' }}>
               {proc.category || 'GENERAL'}
             </div>
@@ -188,7 +188,7 @@ export default function ProcedureViewer() {
             <div style={{ color: '#888', fontSize: '13px', marginBottom: '14px' }}>{proc.description}</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#555', fontSize: '12px' }}>v{proc.version}</span>
-              <button style={s.btn('#ff5c5c')} onClick={() => startRun(proc.id)}>▶ Start</button>
+              <button style={btn('#ff5c5c')} onClick={() => startRun(proc.id)}>▶ Start</button>
             </div>
           </div>
         ))}

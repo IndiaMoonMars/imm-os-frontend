@@ -72,27 +72,27 @@ export default function BriefingDashboard() {
     }
   }
 
-  const s: Record<string, React.CSSProperties> = {
-    wrap: { padding: '20px', color: '#e6f0ff', background: '#0d1117', minHeight: '100%', fontFamily: "'Inter', sans-serif" },
-    panel: { background: '#1a2133', border: '1px solid #2a7fff33', borderRadius: '10px', padding: '18px', marginBottom: '18px' },
-    input: { width: '100%', padding: '9px 12px', background: '#0d1117', color: '#e6f0ff', border: '1px solid #2a7fff55', borderRadius: '6px', marginBottom: '10px', boxSizing: 'border-box' as const },
-    btn: (c = '#2a7fff'): React.CSSProperties => ({ padding: '9px 20px', background: c, color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' }),
+  const st = {
+    wrap: { padding: '20px', color: '#e6f0ff', background: '#0d1117', minHeight: '100%', fontFamily: "'Inter', sans-serif" } as React.CSSProperties,
+    panel: { background: '#1a2133', border: '1px solid #2a7fff33', borderRadius: '10px', padding: '18px', marginBottom: '18px' } as React.CSSProperties,
+    input: { width: '100%', padding: '9px 12px', background: '#0d1117', color: '#e6f0ff', border: '1px solid #2a7fff55', borderRadius: '6px', marginBottom: '10px', boxSizing: 'border-box' as const } as React.CSSProperties,
   }
+  const btn = (c = '#2a7fff'): React.CSSProperties => ({ padding: '9px 20px', background: c, color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' })
 
   const isAcked = (idx: number) => briefing?.acks?.some(a => a.crew_id === CREW_ID && a.item_index === idx)
 
   return (
-    <div style={s.wrap}>
+    <div style={st.wrap}>
       <h1 style={{ color: '#ffaa00' }}>📋 Daily Mission Briefing</h1>
-      {status && <div style={{ ...s.panel, color: 'lime', padding: '10px 16px' }}>{status}</div>}
+      {status && <div style={{ ...st.panel, color: 'lime', padding: '10px 16px' }}>{status}</div>}
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '18px' }}>
-        <button style={s.btn(view === 'today' ? '#ffaa00' : '#333')} onClick={() => setView('today')}>📅 Today's Briefing</button>
-        <button style={s.btn(view === 'create' ? '#ffaa00' : '#333')} onClick={() => setView('create')}>➕ Create Briefing</button>
+        <button style={btn(view === 'today' ? '#ffaa00' : '#333')} onClick={() => setView('today')}>📅 Today's Briefing</button>
+        <button style={btn(view === 'create' ? '#ffaa00' : '#333')} onClick={() => setView('create')}>➕ Create Briefing</button>
       </div>
 
       {view === 'today' && !briefing && (
-        <div style={s.panel}>
+        <div style={st.panel}>
           <p style={{ color: '#555' }}>No briefing filed for today. Commander should create one.</p>
         </div>
       )}
@@ -104,14 +104,11 @@ export default function BriefingDashboard() {
         const total = assignments.length
         const ackedCount = new Set(acks.map(a => a.item_index)).size
         const pct = total > 0 ? Math.round(100 * ackedCount / total) : 0
-
-        // ECLSS snapshot (could be nested)
         const eclss = typeof briefing.eclss_snapshot === 'string'
           ? JSON.parse(briefing.eclss_snapshot) : briefing.eclss_snapshot
-
         return (
           <>
-            <div style={s.panel}>
+            <div style={st.panel}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <h2 style={{ margin: 0, color: '#ffaa00' }}>Mission Day {briefing.mission_day} Briefing</h2>
                 <span style={{ color: pct === 100 ? '#00ff7f' : '#ff5c5c', fontWeight: 700 }}>
@@ -129,19 +126,15 @@ export default function BriefingDashboard() {
                 </div>
               )}
             </div>
-
-            {/* ECLSS Snapshot */}
             {eclss && (
-              <div style={s.panel}>
+              <div style={st.panel}>
                 <div style={{ color: '#2affe0', fontWeight: 700, marginBottom: '10px' }}>🌿 ECLSS STATUS (Auto-pulled at briefing time)</div>
                 <pre style={{ color: '#aaa', fontSize: '12px', overflow: 'auto', margin: 0 }}>
                   {JSON.stringify(eclss, null, 2)}
                 </pre>
               </div>
             )}
-
-            {/* Assignment Checklist */}
-            <div style={s.panel}>
+            <div style={st.panel}>
               <div style={{ color: '#a855f7', fontWeight: 700, marginBottom: '12px' }}>📌 CREW ASSIGNMENTS — TAP TO ACKNOWLEDGE</div>
               {assignments.map((a, idx) => (
                 <div key={idx} onClick={() => ackItem(idx)}
@@ -151,12 +144,8 @@ export default function BriefingDashboard() {
                     border: `1px solid ${isAcked(idx) ? '#00ff7f44' : '#333'}` }}>
                   <span style={{ fontSize: '20px' }}>{isAcked(idx) ? '✅' : '⬜'}</span>
                   <div>
-                    <div style={{ fontWeight: 700, color: isAcked(idx) ? '#00ff7f' : '#fff' }}>
-                      {a.crew_id}
-                    </div>
-                    <div style={{ color: '#aaa', fontSize: '13px', textDecoration: isAcked(idx) ? 'line-through' : 'none' }}>
-                      {a.task}
-                    </div>
+                    <div style={{ fontWeight: 700, color: isAcked(idx) ? '#00ff7f' : '#fff' }}>{a.crew_id}</div>
+                    <div style={{ color: '#aaa', fontSize: '13px', textDecoration: isAcked(idx) ? 'line-through' : 'none' }}>{a.task}</div>
                   </div>
                 </div>
               ))}
@@ -166,33 +155,33 @@ export default function BriefingDashboard() {
       })()}
 
       {view === 'create' && (
-        <div style={s.panel}>
+        <div style={st.panel}>
           <h2 style={{ color: '#ffaa00', marginTop: 0 }}>New Briefing</h2>
           <label style={{ fontSize: '13px', color: '#aaa' }}>Mission Objectives</label>
-          <textarea rows={4} style={s.input} value={form.objectives}
+          <textarea rows={4} style={st.input} value={form.objectives}
             onChange={e => setForm({ ...form, objectives: e.target.value })}
             placeholder="Today's mission goals and priorities…" />
           <label style={{ fontSize: '13px', color: '#aaa' }}>EVA Activity Summary</label>
-          <input style={s.input} value={form.eva_summary}
+          <input style={st.input} value={form.eva_summary}
             onChange={e => setForm({ ...form, eva_summary: e.target.value })}
             placeholder="EVA plan reference or description…" />
           <label style={{ fontSize: '13px', color: '#aaa', display: 'block', marginBottom: '6px' }}>Crew Assignments</label>
           {form.assignments.map((a, idx) => (
             <div key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-              <input style={{ ...s.input, width: '120px', marginBottom: 0 }} value={a.crew_id}
+              <input style={{ ...st.input, width: '120px', marginBottom: 0 }} value={a.crew_id}
                 onChange={e => { const as = [...form.assignments]; as[idx].crew_id = e.target.value; setForm({ ...form, assignments: as }) }}
                 placeholder="Crew ID" />
-              <input style={{ ...s.input, flex: 1, marginBottom: 0 }} value={a.task}
+              <input style={{ ...st.input, flex: 1, marginBottom: 0 }} value={a.task}
                 onChange={e => { const as = [...form.assignments]; as[idx].task = e.target.value; setForm({ ...form, assignments: as }) }}
                 placeholder="Task description…" />
             </div>
           ))}
-          <button style={{ ...s.btn('#333'), marginBottom: '16px' }}
+          <button style={{ ...btn('#333'), marginBottom: '16px' }}
             onClick={() => setForm({ ...form, assignments: [...form.assignments, { crew_id: '', task: '' }] })}>
             + Add Crew Member
           </button>
           <br />
-          <button style={s.btn('#ffaa00')} onClick={createBriefing}>CREATE BRIEFING</button>
+          <button style={btn('#ffaa00')} onClick={createBriefing}>CREATE BRIEFING</button>
           <div style={{ color: '#aaa', fontSize: '12px', marginTop: '10px' }}>
             ECLSS status will be automatically pulled from live sensors at time of creation.
           </div>
