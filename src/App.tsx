@@ -8,10 +8,11 @@ import SchedulingDashboard from './SchedulingDashboard'
 import ProcedureViewer from './ProcedureViewer'
 import MedicalDashboard from './MedicalDashboard'
 import PsychDashboard from './PsychDashboard'
+import AiDashboard from './AiDashboard'
 
 interface LightingState { brightness: number; kelvin: number }
 
-type Tab = 'eclss' | 'eva' | 'comms' | 'journal' | 'briefing' | 'schedule' | 'procedures' | 'medical' | 'psych'
+type Tab = 'eclss' | 'eva' | 'comms' | 'journal' | 'briefing' | 'schedule' | 'procedures' | 'medical' | 'psych' | 'ai'
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'eclss',      label: '🌿 ECLSS'       },
@@ -23,6 +24,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'procedures', label: '📑 Procedures'  },
   { key: 'medical',    label: '🏥 Medical'     },
   { key: 'psych',      label: '🧠 Psychology'  },
+  { key: 'ai',         label: '🤖 AI & Autonomy' },
 ]
 
 function App() {
@@ -113,6 +115,7 @@ function App() {
       {activeTab === 'procedures' && <ProcedureViewer />}
       {activeTab === 'medical'    && <MedicalDashboard />}
       {activeTab === 'psych'      && <PsychDashboard />}
+      {activeTab === 'ai'         && <AiDashboard />}
     </div>
   )
 }
