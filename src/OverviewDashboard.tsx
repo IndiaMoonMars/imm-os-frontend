@@ -11,8 +11,10 @@ import { ATMOS } from './theme/atmos'
 const NODE_META: Record<string, { zone: string; hw: string }> = {
   'node-rpi-01': { zone: 'Habitat Zone A', hw: 'Raspberry Pi' },
   'node-rpi-02': { zone: 'Habitat Zone B', hw: 'Raspberry Pi' },
-  'node-jetson': { zone: 'Compute / Power', hw: 'Jetson Orin' },
+  'node-compute': { zone: 'Compute / Power', hw: 'Raspberry Pi 5' },
 }
+
+const flag = (r?: Reading) => Number(r?.value) === 1
 
 const num = (r?: Reading) => (r ? Number(r.value) : undefined)
 
@@ -24,7 +26,10 @@ function ageLabel(ts?: string): string {
 
 export default function OverviewDashboard({ onNavigate }: { onNavigate: (k: TabKey) => void }) {
   const { data, error } = useSharedTelemetry()
-  const jet = data?.readings['node-jetson'] ?? {}
+  const readings = data?.readings ?? {}
+  // power readings: the compute/power node, else whichever node carries the BMS
+  const pwr = readings['node-compute'] ?? Object.values(readings).find(r => r.battery_level || r.solar_input) ?? {}
+  const health = Object.entries(readings).filter(([, r]) => r.cpu_temp).sort(([a], [b]) => a.localeCompare(b))
   const atm = Object.fromEntries(Object.keys(ATMOS).map(k => [k, avgOf(data, k)])) as Record<string, Reading | undefined>
 
   const levels: Level[] = Object.entries(ATMOS).map(([k, l]) => levelOf(num(atm[k]), l.lo, l.hi, l.margin))
@@ -34,10 +39,10 @@ export default function OverviewDashboard({ onNavigate }: { onNavigate: (k: TabK
 
   const trend = useRolling({
     temperature: num(atm.temperature), co2: num(atm.co2), o2: num(atm.o2),
-    power: num(jet.power_draw), solar: num(jet.solar_input),
+    power: num(pwr.power_draw), solar: num(pwr.solar_input),
   })
 
-  const battery = num(jet.battery_level)
+  const battery = num(pwr.battery_level)
   const allReadings = data ? Object.values(data.readings).flatMap(n => Object.values(n)) : []
   const simulated = allReadings.length === 0 || allReadings.some(r => isSimulated(r))
 
@@ -70,11 +75,11 @@ export default function OverviewDashboard({ onNavigate }: { onNavigate: (k: TabK
             <RingGauge value={battery} min={0} max={100} label="Battery" unit="% SoC" decimals={0}
               level={levelOf(battery, 30, 100, 15)} />
             <div className="tile-stack">
-              <StatTile label="Solar input" value={num(jet.solar_input)?.toFixed(1) ?? '—'} unit="W" level="ok">
+              <StatTile label="Solar input" value={num(pwr.solar_input)?.toFixed(1) ?? '—'} unit="W" level="ok">
                 <Sparkline id="solar" data={trend.solar ?? []} color="#ffc26b" />
               </StatTile>
-              <StatTile label="Load" value={num(jet.power_draw)?.toFixed(1) ?? '—'} unit="W"
-                level={levelOf(num(jet.power_draw), 0, 25, 10)}>
+              <StatTile label="Load" value={num(pwr.power_draw)?.toFixed(1) ?? '—'} unit="W"
+                level={levelOf(num(pwr.power_draw), 0, 25, 10)}>
                 <Sparkline id="power" data={trend.power ?? []} color="#ff7a3d" />
               </StatTile>
             </div>
@@ -107,6 +112,7 @@ export default function OverviewDashboard({ onNavigate }: { onNavigate: (k: TabK
                   <div className="node-main">
                     <strong>{id}</strong>
                     <small>{meta.hw} · {meta.zone}</small>
+                    {flag(r?.undervoltage) && <Pill tone="crit">UNDER-VOLTAGE</Pill>}
                   </div>
                   <div className="node-side">
                     <span>{online ? `${vals.length} channels` : 'no data'}</span>
@@ -118,13 +124,24 @@ export default function OverviewDashboard({ onNavigate }: { onNavigate: (k: TabK
             })}
           </div>
         </Panel>
-        <Panel title="Compute" icon={<Cpu size={16} />}>
-          <div className="gauge-row compact">
-            <RingGauge value={num(jet.cpu_temp)} min={20} max={100} label="CPU" unit="°C" size={116}
-              level={levelOf(num(jet.cpu_temp), 20, 70, 15)} />
-            <RingGauge value={num(jet.gpu_temp)} min={20} max={100} label="GPU" unit="°C" size={116}
-              level={levelOf(num(jet.gpu_temp), 20, 75, 15)} />
-          </div>
+        <Panel title="Node health" icon={<Cpu size={16} />}>
+          {health.length === 0 ? <div className="empty">No node health reports yet (sysmon_driver.py)</div> : (
+            <div className="gauge-row compact">
+              {health.map(([id, r]) => (
+                <div key={id} className="health-node">
+                  <RingGauge value={num(r.cpu_temp)} min={20} max={90} label={id.replace(/^node-/, '')} unit="°C SoC" size={112}
+                    level={levelOf(num(r.cpu_temp), 20, 70, 10)} />
+                  <div className="health-meta">
+                    {r.cpu_load && <span>CPU {num(r.cpu_load)?.toFixed(0)}%</span>}
+                    {r.fan && <span>Fan {num(r.fan)?.toFixed(0)} rpm</span>}
+                    {r.supply_voltage && <span>{num(r.supply_voltage)?.toFixed(2)} V in</span>}
+                  </div>
+                  {flag(r.undervoltage) ? <Pill tone="crit">UNDER-VOLTAGE</Pill>
+                    : flag(r.throttled) ? <Pill tone="warn">THROTTLED</Pill> : null}
+                </div>
+              ))}
+            </div>
+          )}
         </Panel>
       </div>
 
