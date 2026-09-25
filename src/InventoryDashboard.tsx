@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { authFetch, currentUser } from './auth'
+import { btn, IDLE } from './kit'
 
 const API = '/inventory'
 const CREW_ID = currentUser()
@@ -30,7 +31,7 @@ interface ApiError { detail?: string | { msg: string }[] }
 
 type Tab = 'stock' | 'scan' | 'tools' | 'incidents' | 'repairs'
 
-const SEVERITY_COLORS = ['', '#2affe0', '#00ff7f', '#ffaa00', '#ff8c42', '#ff5c5c']
+const SEVERITY_COLORS = ['', '#2affe0', '#3ef0a0', '#ffb547', '#ff8c42', '#ff5d73']
 
 async function errorText(r: Response): Promise<string> {
   try {
@@ -183,25 +184,23 @@ export default function InventoryDashboard() {
   }
 
   const st = {
-    wrap: { padding: '20px', color: '#e6f0ff', background: '#0d1117', minHeight: '100%', fontFamily: "'Inter', sans-serif" } as React.CSSProperties,
-    panel: { background: '#1a2133', border: '1px solid #2a7fff33', borderRadius: '10px', padding: '18px', marginBottom: '18px' } as React.CSSProperties,
-    input: { width: '100%', padding: '8px 12px', background: '#0d1117', color: '#e6f0ff', border: '1px solid #2a7fff55', borderRadius: '6px', marginBottom: '8px', boxSizing: 'border-box' as const } as React.CSSProperties,
+    wrap: { color: '#dfe7fb' } as React.CSSProperties,
+    panel: { background: 'rgba(12,18,34,0.72)', border: '1px solid #fb923c33', borderRadius: '16px', padding: '18px', marginBottom: '18px' } as React.CSSProperties,
+    input: { width: '100%', padding: '8px 12px', background: 'rgba(5,9,18,0.78)', color: '#e6f0ff', border: '1px solid #fb923c55', borderRadius: '6px', marginBottom: '8px', boxSizing: 'border-box' as const } as React.CSSProperties,
     row: { display: 'flex', gap: '8px' } as React.CSSProperties,
     td: { padding: '6px 8px', borderBottom: '1px solid #222', fontSize: '13px' } as React.CSSProperties,
   }
-  const btn = (c = '#2a7fff'): React.CSSProperties => ({ padding: '8px 18px', background: c, color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' })
-  const small = (c = '#333'): React.CSSProperties => ({ ...btn(c), padding: '2px 10px', marginRight: '4px' })
+  const small = (c = '#243052'): React.CSSProperties => ({ ...btn(c), padding: '2px 10px', marginRight: '4px' })
   const openCheckouts = checkouts.filter(c => !c.checked_in_at)
 
   return (
     <div style={st.wrap}>
-      <h1 style={{ color: '#ffaa00' }}>📦 Inventory</h1>
       <div style={{ marginBottom: '16px' }}>
         {([['stock', '📋 Stock'], ['scan', '🔎 Scan'], ['tools', `🔧 Tools (${openCheckouts.length} out)`], ['incidents', '⚠️ Incidents'], ['repairs', '🛠 Repairs']] as [Tab, string][]).map(([key, label]) => (
-          <button key={key} style={btn(tab === key ? '#ffaa00' : '#333')} onClick={() => setTab(key)}>{label}</button>
+          <button key={key} style={btn(tab === key ? '#fb923c' : IDLE)} onClick={() => setTab(key)}>{label}</button>
         ))}
       </div>
-      {status && <div style={{ marginBottom: '12px', color: status.startsWith('✗') ? '#ff5c5c' : '#00ff7f' }}>{status}</div>}
+      {status && <div style={{ marginBottom: '12px', color: status.startsWith('✗') ? '#ff5d73' : '#3ef0a0' }}>{status}</div>}
 
       {tab === 'stock' && (
         <>
@@ -213,7 +212,7 @@ export default function InventoryDashboard() {
               </label>
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead><tr style={{ color: '#888', textAlign: 'left' }}>
+              <thead><tr style={{ color: '#8290b0', textAlign: 'left' }}>
                 <th style={st.td}>Barcode</th><th style={st.td}>Item</th><th style={st.td}>Stock</th>
                 <th style={st.td}>Location</th><th style={st.td}>Status</th><th style={st.td}></th>
               </tr></thead>
@@ -221,12 +220,12 @@ export default function InventoryDashboard() {
                 {items.map(i => (
                   <tr key={i.id}>
                     <td style={{ ...st.td, fontFamily: 'monospace' }}>{i.barcode}</td>
-                    <td style={st.td}>{i.name}{i.is_tool && ' 🔧'} <span style={{ color: '#666' }}>{i.category}</span></td>
-                    <td style={{ ...st.td, color: i.low_stock ? '#ff5c5c' : '#e6f0ff', fontWeight: 700 }}>{i.quantity} {i.unit}</td>
+                    <td style={st.td}>{i.name}{i.is_tool && ' 🔧'} <span style={{ color: '#65728f' }}>{i.category}</span></td>
+                    <td style={{ ...st.td, color: i.low_stock ? '#ff5d73' : '#e6f0ff', fontWeight: 700 }}>{i.quantity} {i.unit}</td>
                     <td style={st.td}>{i.location ?? '—'}</td>
                     <td style={st.td}>
-                      {i.low_stock && <span style={{ color: '#ff5c5c' }}>⚠ low </span>}
-                      {i.checked_out && <span style={{ color: '#ffaa00' }}>out: {i.checked_out.crew_id}</span>}
+                      {i.low_stock && <span style={{ color: '#ff5d73' }}>⚠ low </span>}
+                      {i.checked_out && <span style={{ color: '#ffb547' }}>out: {i.checked_out.crew_id}</span>}
                     </td>
                     <td style={st.td}>
                       <button style={small('#00a86b')} onClick={() => adjust(i, 1)}>+</button>
@@ -236,7 +235,7 @@ export default function InventoryDashboard() {
                 ))}
               </tbody>
             </table>
-            {items.length === 0 && <p style={{ color: '#555' }}>No items.</p>}
+            {items.length === 0 && <p style={{ color: '#3a4766' }}>No items.</p>}
           </div>
           <div style={st.panel}>
             <h3 style={{ marginTop: 0 }}>Add item</h3>
@@ -269,19 +268,19 @@ export default function InventoryDashboard() {
 
       {tab === 'scan' && (
         <div style={st.panel}>
-          <p style={{ color: '#aaa', marginTop: 0 }}>Scan a barcode (USB scanners type into this box) or type it and press Enter.</p>
+          <p style={{ color: '#9aa8c7', marginTop: 0 }}>Scan a barcode (USB scanners type into this box) or type it and press Enter.</p>
           <input ref={scanRef} style={{ ...st.input, fontSize: '20px', fontFamily: 'monospace' }} placeholder="Barcode…"
             value={scanCode} onChange={e => setScanCode(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') doScan(scanCode) }} />
           {scanned && (
             <div style={{ marginTop: '12px' }}>
               <h2 style={{ margin: '0 0 6px' }}>{scanned.name}</h2>
-              <div style={{ fontSize: '28px', fontWeight: 900, color: scanned.low_stock ? '#ff5c5c' : '#00ff7f' }}>
+              <div style={{ fontSize: '28px', fontWeight: 900, color: scanned.low_stock ? '#ff5d73' : '#3ef0a0' }}>
                 {scanned.quantity} {scanned.unit}{scanned.low_stock && ' ⚠ low'}
               </div>
-              <div style={{ color: '#aaa', margin: '6px 0 12px' }}>{scanned.location ?? 'no location'} · {scanned.physical_state} · {scanned.barcode}</div>
+              <div style={{ color: '#9aa8c7', margin: '6px 0 12px' }}>{scanned.location ?? 'no location'} · {scanned.physical_state} · {scanned.barcode}</div>
               {scanned.is_tool && (scanned.checked_out ? (
                 <>
-                  <div style={{ color: '#ffaa00', marginBottom: '8px' }}>
+                  <div style={{ color: '#ffb547', marginBottom: '8px' }}>
                     Out to {scanned.checked_out.crew_id} for {scanned.checked_out.activity} ({minutesSince(scanned.checked_out.checked_out_at)} min)
                   </div>
                   <button style={btn('#00a86b')} onClick={() => toolAction('checkin')}>Check in</button>
@@ -300,7 +299,7 @@ export default function InventoryDashboard() {
       {tab === 'tools' && (
         <div style={st.panel}>
           <h3 style={{ marginTop: 0 }}>Checked out now</h3>
-          {openCheckouts.length === 0 && <p style={{ color: '#555' }}>All tools are in.</p>}
+          {openCheckouts.length === 0 && <p style={{ color: '#3a4766' }}>All tools are in.</p>}
           {openCheckouts.map(c => (
             <div key={c.id} style={{ padding: '6px 0', borderBottom: '1px solid #222' }}>
               🔧 <b>{c.item_name}</b> → {c.crew_id} · {c.activity} · {minutesSince(c.checked_out_at)} min
@@ -308,7 +307,7 @@ export default function InventoryDashboard() {
           ))}
           <h3>Recent returns</h3>
           {checkouts.filter(c => c.checked_in_at).slice(0, 20).map(c => (
-            <div key={c.id} style={{ padding: '4px 0', color: '#aaa', fontSize: '13px' }}>
+            <div key={c.id} style={{ padding: '4px 0', color: '#9aa8c7', fontSize: '13px' }}>
               {c.item_name} · {c.crew_id} · {c.activity} · {((c.duration_seconds ?? 0) / 60).toFixed(1)} min
             </div>
           ))}
@@ -328,19 +327,19 @@ export default function InventoryDashboard() {
             <textarea style={st.input} rows={3} placeholder="What happened?" value={incidentForm.description} onChange={e => setIncidentForm({ ...incidentForm, description: e.target.value })} />
             <textarea style={st.input} rows={2} placeholder="Immediate action taken" value={incidentForm.immediate_action} onChange={e => setIncidentForm({ ...incidentForm, immediate_action: e.target.value })} />
             <input style={st.input} type="file" accept="image/jpeg,image/png,image/webp" onChange={e => setPhoto(e.target.files?.[0] ?? null)} />
-            <button style={btn('#ff5c5c')} disabled={!incidentForm.description} onClick={reportIncident}>Report</button>
+            <button style={btn('#ff5d73')} disabled={!incidentForm.description} onClick={reportIncident}>Report</button>
           </div>
           <div style={st.panel}>
             {incidents.map(i => (
               <div key={i.id} style={{ padding: '8px 0', borderBottom: '1px solid #222' }}>
                 <span style={{ color: SEVERITY_COLORS[i.severity], fontWeight: 700 }}>SEV {i.severity}</span> · {i.zone} · {new Date(i.occurred_at).toLocaleString()} · {i.reported_by}
                 <div>{i.description}</div>
-                {i.immediate_action && <div style={{ color: '#aaa' }}>Action: {i.immediate_action}</div>}
+                {i.immediate_action && <div style={{ color: '#9aa8c7' }}>Action: {i.immediate_action}</div>}
                 {i.has_photo && !photoUrls[i.id] && <button style={small()} onClick={() => showPhoto(i.id)}>View photo</button>}
                 {photoUrls[i.id] && <img src={photoUrls[i.id]} alt={`Incident ${i.id}`} style={{ maxWidth: '320px', marginTop: '6px', borderRadius: '6px' }} />}
               </div>
             ))}
-            {incidents.length === 0 && <p style={{ color: '#555' }}>No incidents reported.</p>}
+            {incidents.length === 0 && <p style={{ color: '#3a4766' }}>No incidents reported.</p>}
           </div>
         </>
       )}
@@ -350,7 +349,7 @@ export default function InventoryDashboard() {
           <div style={st.panel}>
             <h3 style={{ marginTop: 0 }}>Log repair</h3>
             <input style={st.input} placeholder="Item repaired" value={repairForm.item_description} onChange={e => setRepairForm({ ...repairForm, item_description: e.target.value })} />
-            <div style={{ color: '#aaa', margin: '4px 0' }}>Parts used (deducted from stock)</div>
+            <div style={{ color: '#9aa8c7', margin: '4px 0' }}>Parts used (deducted from stock)</div>
             {parts.map((p, idx) => (
               <div key={idx} style={st.row}>
                 <input style={st.input} placeholder="Part barcode" value={p.barcode}
@@ -371,10 +370,10 @@ export default function InventoryDashboard() {
             {repairs.map(r => (
               <div key={r.id} style={{ padding: '8px 0', borderBottom: '1px solid #222' }}>
                 <b>{r.item_description}</b> · {r.repair_minutes} min · {r.technician} (signed “{r.signature}”) · {new Date(r.created_at).toLocaleString()}
-                {r.parts.length > 0 && <div style={{ color: '#aaa', fontSize: '13px' }}>Parts: {r.parts.map(p => `${p.quantity} ${p.unit} ${p.name}`).join(', ')}</div>}
+                {r.parts.length > 0 && <div style={{ color: '#9aa8c7', fontSize: '13px' }}>Parts: {r.parts.map(p => `${p.quantity} ${p.unit} ${p.name}`).join(', ')}</div>}
               </div>
             ))}
-            {repairs.length === 0 && <p style={{ color: '#555' }}>No repairs logged.</p>}
+            {repairs.length === 0 && <p style={{ color: '#3a4766' }}>No repairs logged.</p>}
           </div>
         </>
       )}

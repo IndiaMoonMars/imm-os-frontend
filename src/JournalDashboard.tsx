@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { authFetch, currentUser } from './auth'
+import { btn, IDLE } from './kit'
 
 const API = '/comms'
 const CREW_ID = currentUser()
@@ -95,41 +96,39 @@ export default function JournalDashboard() {
   }
 
   const st = {
-    wrap: { padding: '20px', color: '#e6f0ff', background: '#0d1117', minHeight: '100%', fontFamily: "'Inter', sans-serif" } as React.CSSProperties,
-    panel: { background: '#1a2133', border: '1px solid #2a7fff33', borderRadius: '10px', padding: '18px', marginBottom: '18px' } as React.CSSProperties,
-    input: { width: '100%', padding: '9px 12px', background: '#0d1117', color: '#e6f0ff', border: '1px solid #2a7fff55', borderRadius: '6px', marginBottom: '10px', boxSizing: 'border-box' as const } as React.CSSProperties,
+    wrap: { color: '#dfe7fb' } as React.CSSProperties,
+    panel: { background: 'rgba(12,18,34,0.72)', border: '1px solid #e879f933', borderRadius: '16px', padding: '18px', marginBottom: '18px' } as React.CSSProperties,
+    input: { width: '100%', padding: '9px 12px', background: 'rgba(5,9,18,0.78)', color: '#e6f0ff', border: '1px solid #e879f955', borderRadius: '6px', marginBottom: '10px', boxSizing: 'border-box' as const } as React.CSSProperties,
   }
-  const btn = (c = '#2a7fff'): React.CSSProperties => ({ padding: '9px 20px', background: c, color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' })
 
   const mediaIcon: Record<string, string> = { text: '📝', voice: '🎙', video: '📹' }
 
   return (
     <div style={st.wrap}>
-      <h1 style={{ color: '#a855f7' }}>📓 Mission Journal</h1>
-      {status && <div style={{ ...st.panel, color: 'lime', padding: '10px 16px' }}>{status}</div>}
+      {status && <div style={{ ...st.panel, color: '#3ef0a0', padding: '10px 16px' }}>{status}</div>}
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '18px' }}>
-        <button style={btn(view === 'timeline' ? '#a855f7' : '#333')} onClick={() => setView('timeline')}>📅 Timeline</button>
-        <button style={btn(view === 'write' ? '#a855f7' : '#333')} onClick={() => setView('write')}>📝 Write</button>
-        <button style={btn(view === 'voice' ? '#a855f7' : '#333')} onClick={() => setView('voice')}>🎙 Voice</button>
+        <button style={btn(view === 'timeline' ? '#e879f9' : IDLE)} onClick={() => setView('timeline')}>📅 Timeline</button>
+        <button style={btn(view === 'write' ? '#e879f9' : IDLE)} onClick={() => setView('write')}>📝 Write</button>
+        <button style={btn(view === 'voice' ? '#e879f9' : IDLE)} onClick={() => setView('voice')}>🎙 Voice</button>
       </div>
 
       {view === 'timeline' && (
         <div>
-          {entries.length === 0 && <p style={{ color: '#555' }}>No journal entries yet.</p>}
+          {entries.length === 0 && <p style={{ color: '#3a4766' }}>No journal entries yet.</p>}
           {entries.map(e => (
             <div key={e.id} style={st.panel}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontWeight: 700, fontSize: '16px' }}>{mediaIcon[e.media_type] || '📄'} {e.title || 'Untitled'}</span>
-                <span style={{ color: '#a855f7', fontSize: '13px' }}>Mission Day {e.mission_day}</span>
+                <span style={{ color: '#e879f9', fontSize: '13px' }}>Mission Day {e.mission_day}</span>
               </div>
               {e.body && e.body !== '[PRIVATE]' && (
-                <p style={{ color: '#ccc', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{e.body}</p>
+                <p style={{ color: '#c3cde3', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{e.body}</p>
               )}
-              {e.body === '[PRIVATE]' && <p style={{ color: '#555', fontStyle: 'italic' }}>[Private — flight surgeon access only]</p>}
+              {e.body === '[PRIVATE]' && <p style={{ color: '#3a4766', fontStyle: 'italic' }}>[Private — flight surgeon access only]</p>}
               {e.tags?.length > 0 && (
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
-                  {e.tags.map(t => <span key={t} style={{ padding: '2px 10px', background: '#a855f722', color: '#a855f7', border: '1px solid #a855f755', borderRadius: '12px', fontSize: '12px' }}>{t}</span>)}
+                  {e.tags.map(t => <span key={t} style={{ padding: '2px 10px', background: '#e879f922', color: '#e879f9', border: '1px solid #e879f955', borderRadius: '12px', fontSize: '12px' }}>{t}</span>)}
                 </div>
               )}
             </div>
@@ -139,34 +138,34 @@ export default function JournalDashboard() {
 
       {view === 'write' && (
         <div style={st.panel}>
-          <h2 style={{ color: '#a855f7', marginTop: 0 }}>New Journal Entry</h2>
+          <h2 style={{ color: '#e879f9', marginTop: 0 }}>New Journal Entry</h2>
           <input style={st.input} placeholder="Title (optional)" value={form.title}
             onChange={e => setForm({ ...form, title: e.target.value })} />
           <textarea rows={8} style={st.input} placeholder="Write your mission log…" value={form.body}
             onChange={e => setForm({ ...form, body: e.target.value })} />
           <input style={st.input} placeholder="Tags (comma-separated)" value={form.tags}
             onChange={e => setForm({ ...form, tags: e.target.value })} />
-          <button style={btn('#a855f7')} onClick={submitJournal}>SAVE ENTRY</button>
+          <button style={btn('#e879f9')} onClick={submitJournal}>SAVE ENTRY</button>
         </div>
       )}
 
       {view === 'voice' && (
         <div style={st.panel}>
-          <h2 style={{ color: '#a855f7', marginTop: 0 }}>Voice Memo</h2>
+          <h2 style={{ color: '#e879f9', marginTop: 0 }}>Voice Memo</h2>
           <input style={st.input} placeholder="Memo title (optional)" value={form.title}
             onChange={e => setForm({ ...form, title: e.target.value })} />
           <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
             {!recording && !audioBlob && (
-              <button style={btn('#ff5c5c')} onClick={startRecording}>🔴 Start Recording</button>
+              <button style={btn('#ff5d73')} onClick={startRecording}>🔴 Start Recording</button>
             )}
             {recording && (
-              <button style={btn('#ffaa00')} onClick={stopRecording}>⏹ Stop Recording</button>
+              <button style={btn('#ffb547')} onClick={stopRecording}>⏹ Stop Recording</button>
             )}
             {audioBlob && !recording && (
               <>
                 <audio controls src={URL.createObjectURL(audioBlob)} style={{ flex: 1 }} />
-                <button style={btn('#a855f7')} onClick={uploadAudio}>💾 Save</button>
-                <button style={btn('#333')} onClick={() => setAudioBlob(null)}>🗑 Discard</button>
+                <button style={btn('#e879f9')} onClick={uploadAudio}>💾 Save</button>
+                <button style={btn(IDLE)} onClick={() => setAudioBlob(null)}>🗑 Discard</button>
               </>
             )}
           </div>

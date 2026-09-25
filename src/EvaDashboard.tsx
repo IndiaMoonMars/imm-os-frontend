@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { authFetch } from './auth'
+import { btn } from './kit'
 
 interface EvaPlan {
   id?: number
@@ -93,29 +94,23 @@ export default function EvaDashboard() {
   }
 
   const panelStyle: React.CSSProperties = {
-    background: '#1a2133', border: '1px solid #2a7fff33',
-    borderRadius: '10px', padding: '20px', marginBottom: '20px'
+    background: 'rgba(12,18,34,0.72)', border: '1px solid #fbbf2433',
+    borderRadius: '16px', padding: '20px', marginBottom: '20px'
   }
-  const labelStyle: React.CSSProperties = { display: 'block', color: '#aaa', marginBottom: '4px', fontSize: '13px' }
+  const labelStyle: React.CSSProperties = { display: 'block', color: '#9aa8c7', marginBottom: '4px', fontSize: '13px' }
   const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '8px 10px', background: '#0d1117',
-    color: '#e6f0ff', border: '1px solid #2a7fff55', borderRadius: '6px',
+    width: '100%', padding: '8px 10px', background: 'rgba(5,9,18,0.78)',
+    color: '#e6f0ff', border: '1px solid #fbbf2455', borderRadius: '10px',
     marginBottom: '12px', boxSizing: 'border-box', fontSize: '14px'
   }
-  const btnStyle = (color = '#2a7fff'): React.CSSProperties => ({
-    padding: '10px 22px', background: color, color: '#fff',
-    border: 'none', borderRadius: '6px', cursor: 'pointer',
-    fontWeight: 'bold', letterSpacing: '0.5px', marginRight: '10px'
-  })
 
   return (
-    <div style={{ padding: '24px', background: '#0d1117', minHeight: '100vh', color: '#e6f0ff', fontFamily: "'Inter', sans-serif" }}>
-      <h1 style={{ color: '#2a7fff', fontWeight: 700, letterSpacing: '1px' }}>⛑ EVA Mission Control</h1>
-      {statusMsg && <div style={{ background: '#162d3a', padding: '10px 16px', borderRadius: '6px', marginBottom: '18px', color: 'lime' }}>{statusMsg}</div>}
+    <div style={{ color: '#dfe7fb' }}>
+      {statusMsg && <div style={{ background: 'rgba(12,18,34,0.72)', padding: '10px 16px', borderRadius: '6px', marginBottom: '18px', color: '#3ef0a0' }}>{statusMsg}</div>}
 
       {/* ── EVA Plan Form ───────────────────── */}
       <div style={panelStyle}>
-        <h2 style={{ color: '#ffaa00', marginTop: 0 }}>New EVA Plan</h2>
+        <h2 style={{ color: '#ffb547', marginTop: 0 }}>New EVA Plan</h2>
         <label style={labelStyle}>Crew Members (comma-separated)</label>
         <input style={inputStyle} value={form.crew_members.join(', ')}
           onChange={e => setForm({ ...form, crew_members: e.target.value.split(',').map(s => s.trim()) })} />
@@ -131,35 +126,35 @@ export default function EvaDashboard() {
         <label style={labelStyle}>Abort Criteria</label>
         <input style={inputStyle} value={form.abort_criteria}
           onChange={e => setForm({ ...form, abort_criteria: e.target.value })} />
-        <button style={btnStyle()} onClick={submitPlan}>FILE EVA PLAN</button>
+        <button style={btn()} onClick={submitPlan}>FILE EVA PLAN</button>
       </div>
 
       {/* ── Filed EVA Plans + Checklist ─────── */}
       <div style={panelStyle}>
-        <h2 style={{ color: '#ff5c5c', marginTop: 0 }}>Filed Plans & Checklists</h2>
-        {plans.length === 0 && <p style={{ color: '#666' }}>No EVA plans on record.</p>}
+        <h2 style={{ color: '#ff5d73', marginTop: 0 }}>Filed Plans & Checklists</h2>
+        {plans.length === 0 && <p style={{ color: '#65728f' }}>No EVA plans on record.</p>}
         {plans.map(plan => (
-          <div key={plan.id} style={{ background: '#111827', borderRadius: '8px', padding: '16px', marginBottom: '16px', border: `1px solid ${plan.status === 'GO' ? '#00ff7f' : '#333'}` }}>
+          <div key={plan.id} style={{ background: '#111827', borderRadius: '8px', padding: '16px', marginBottom: '16px', border: `1px solid ${plan.status === 'GO' ? '#3ef0a0' : '#243052'}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <span style={{ fontWeight: 700, fontSize: '16px' }}>Plan #{plan.id} — {plan.objectives.slice(0, 60)}</span>
               <span style={{
                 padding: '3px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
-                background: plan.status === 'GO' ? '#00ff7f22' : '#ff5c5c22',
-                color: plan.status === 'GO' ? '#00ff7f' : '#ff5c5c',
-                border: `1px solid ${plan.status === 'GO' ? '#00ff7f' : '#ff5c5c'}`
+                background: plan.status === 'GO' ? '#3ef0a022' : '#ff5d7322',
+                color: plan.status === 'GO' ? '#3ef0a0' : '#ff5d73',
+                border: `1px solid ${plan.status === 'GO' ? '#3ef0a0' : '#ff5d73'}`
               }}>{plan.status}</span>
             </div>
-            <div style={{ color: '#aaa', fontSize: '13px', marginBottom: '12px' }}>
+            <div style={{ color: '#9aa8c7', fontSize: '13px', marginBottom: '12px' }}>
               Crew: {plan.crew_members?.join(', ')} | Duration: {plan.duration_minutes} min
             </div>
-            <div style={{ color: '#ffaa00', fontWeight: 600, marginBottom: '8px', fontSize: '13px' }}>PRE-EVA CHECKLIST</div>
+            <div style={{ color: '#ffb547', fontWeight: 600, marginBottom: '8px', fontSize: '13px' }}>PRE-EVA CHECKLIST</div>
             {(plan.checklist || []).map((item, idx) => (
               <div key={idx} onClick={() => toggleChecklistItem(plan, idx)}
                 style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer',
                   padding: '6px 10px', borderRadius: '5px', marginBottom: '4px',
-                  background: item.done ? '#00ff7f11' : '#111', border: `1px solid ${item.done ? '#00ff7f44' : '#333'}` }}>
+                  background: item.done ? '#3ef0a011' : '#0a1020', border: `1px solid ${item.done ? '#3ef0a044' : '#243052'}` }}>
                 <span style={{ fontSize: '18px' }}>{item.done ? '✅' : '⬜'}</span>
-                <span style={{ color: item.done ? '#00ff7f' : '#ccc', textDecoration: item.done ? 'line-through' : 'none', fontSize: '13px' }}>{item.label}</span>
+                <span style={{ color: item.done ? '#3ef0a0' : '#c3cde3', textDecoration: item.done ? 'line-through' : 'none', fontSize: '13px' }}>{item.label}</span>
               </div>
             ))}
           </div>
@@ -173,12 +168,12 @@ export default function EvaDashboard() {
           {tools.map(t => (
             <div key={t.rfid_tag} style={{
               background: t.is_available ? '#0d2b1a' : '#2b0d0d',
-              border: `1px solid ${t.is_available ? '#2affe0' : '#ff5c5c'}`,
+              border: `1px solid ${t.is_available ? '#2affe0' : '#ff5d73'}`,
               borderRadius: '6px', padding: '8px 14px', fontSize: '12px',
             }}>
-              <div style={{ fontWeight: 700, color: t.is_available ? '#2affe0' : '#ff5c5c' }}>{t.tool_name}</div>
-              <div style={{ color: '#666' }}>{t.rfid_tag} · {t.category}</div>
-              <div style={{ marginTop: '4px', fontWeight: 600, color: t.is_available ? '#00ff7f' : '#ff5c5c' }}>
+              <div style={{ fontWeight: 700, color: t.is_available ? '#2affe0' : '#ff5d73' }}>{t.tool_name}</div>
+              <div style={{ color: '#65728f' }}>{t.rfid_tag} · {t.category}</div>
+              <div style={{ marginTop: '4px', fontWeight: 600, color: t.is_available ? '#3ef0a0' : '#ff5d73' }}>
                 {t.is_available ? 'AVAILABLE' : 'CHECKED OUT'}
               </div>
             </div>
