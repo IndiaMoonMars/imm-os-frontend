@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import { authFetch, currentUser } from './auth'
 
@@ -11,6 +11,10 @@ interface FoodTotals { cal: number; prot: number; carb: number; fat: number }
 interface MedItem { id: number; drug_name: string; dose_mg: number; dose_unit: string; frequency: string; stock_count: number; expiry_date: string; days_until_expiry: number; expiry_flag: string; last_taken_at: string }
 interface Questionnaire { id: number; name: string; description: string }
 interface WorkoutEntry { id: number; exercise_type: string; duration_min: number; intensity: string; avg_hr: number; calories_burned: number; started_at: string }
+interface QuestionItem { id: string; text: string; scale_min: number; scale_max: number }
+interface QuestionnaireDetail extends Questionnaire { questions: QuestionItem[] }
+interface ScoreResult { total_score: number; flagged: boolean }
+interface WeekReport { week_workouts: number; target: number; compliance_pct: number; today_calories: number; last_hr: number | null }
 interface FoodItem { id: number; name: string; calories: number; protein_g: number; carb_g: number; fat_g: number; category: string }
 
 type Tab = 'vitals' | 'food' | 'meds' | 'questionnaire' | 'workout'
@@ -27,11 +31,11 @@ export default function MedicalDashboard() {
   const [foodTotals, setFoodTotals] = useState<FoodTotals>({ cal: 0, prot: 0, carb: 0, fat: 0 })
   const [meds, setMeds] = useState<MedItem[]>([])
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([])
-  const [activeQuestionnaire, setActiveQuestionnaire] = useState<any>(null)
+  const [activeQuestionnaire, setActiveQuestionnaire] = useState<QuestionnaireDetail | null>(null)
   const [qResponses, setQResponses] = useState<Record<string, number>>({})
-  const [qResult, setQResult] = useState<any>(null)
+  const [qResult, setQResult] = useState<ScoreResult | null>(null)
   const [workouts, setWorkouts] = useState<WorkoutEntry[]>([])
-  const [weekReport, setWeekReport] = useState<any>(null)
+  const [weekReport, setWeekReport] = useState<WeekReport | null>(null)
   const [foodSearch, setFoodSearch] = useState('')
   const [foodItems, setFoodItems] = useState<FoodItem[]>([])
   const [status, setStatus] = useState('')
@@ -92,7 +96,7 @@ export default function MedicalDashboard() {
   const addMed = async () => {
     const r = await authFetch(`${API}/api/v1/medical/medication`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ crew_id: CREW_ID, ...medForm, dose_mg: parseFloat(medForm.dose_mg as any), stock_count: +medForm.stock_count })
+      body: JSON.stringify({ crew_id: CREW_ID, ...medForm, dose_mg: parseFloat(medForm.dose_mg), stock_count: +medForm.stock_count })
     })
     if (r.ok) { setStatus('✓ Medication added'); fetchAll() } else setStatus('✗ Failed')
   }
@@ -108,15 +112,16 @@ export default function MedicalDashboard() {
   const loadQuestionnaire = async (id: number) => {
     const r = await authFetch(`${API}/api/v1/medical/questionnaire/${id}`)
     const data = await r.json()
-    const q = { ...data, questions: typeof data.questions === 'string' ? JSON.parse(data.questions) : data.questions }
+    const q: QuestionnaireDetail = { ...data, questions: typeof data.questions === 'string' ? JSON.parse(data.questions) : data.questions }
     setActiveQuestionnaire(q)
     const init: Record<string, number> = {}
-    q.questions.forEach((q: any) => { init[q.id] = Math.floor((q.scale_min + q.scale_max) / 2) })
+    q.questions.forEach(item => { init[item.id] = Math.floor((item.scale_min + item.scale_max) / 2) })
     setQResponses(init)
     setQResult(null)
   }
 
   const submitQuestionnaire = async () => {
+    if (!activeQuestionnaire) return
     const r = await authFetch(`${API}/api/v1/medical/questionnaire/submit`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ crew_id: CREW_ID, template_id: activeQuestionnaire.id, responses: qResponses })
@@ -337,7 +342,7 @@ export default function MedicalDashboard() {
             <div style={st.panel}>
               <h2 style={{ color: '#ff5c5c', marginTop: 0 }}>{activeQuestionnaire.name}</h2>
               <p style={{ color: '#aaa' }}>{activeQuestionnaire.description}</p>
-              {activeQuestionnaire.questions.map((q: any) => (
+              {activeQuestionnaire.questions.map(q => (
                 <div key={q.id} style={{ marginBottom: '18px' }}>
                   <div style={{ marginBottom: '6px', fontSize: '14px' }}>{q.text}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

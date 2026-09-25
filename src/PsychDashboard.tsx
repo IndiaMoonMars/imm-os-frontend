@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, Legend } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid } from 'recharts'
 import { authFetch, currentUser } from './auth'
 
 const API = '/psych'
@@ -9,6 +9,11 @@ interface SleepEntry { id: number; duration_min: number; quality_score: number; 
 interface MoodEntry { id: number; period: string; score: number; note: string; mission_day: number; checked_at: string }
 interface Survey { id: number; name: string; description: string; schedule_days: number }
 interface TrendPoint { day: number; score?: number; hours?: number; quality?: number }
+interface Trends { mood_trend?: TrendPoint[]; sleep_trend?: TrendPoint[]; workload_trend?: TrendPoint[] }
+interface SurveyQuestion { id: string; text: string; scale_min: number; scale_max: number }
+interface SurveyDetail extends Survey { questions: SurveyQuestion[] }
+interface SurveyResult { total_score: number; subscores?: Record<string, number>; flagged: boolean }
+interface OutgoingRating { ratee_id: string; comfort_score: number; mission_day: number }
 
 type Tab = 'sleep' | 'mood' | 'surveys' | 'sociogram' | 'trends'
 
@@ -25,12 +30,12 @@ export default function PsychDashboard() {
   const [moodLog, setMoodLog] = useState<MoodEntry[]>([])
   const [mood7dayAvg, setMood7dayAvg] = useState(0)
   const [surveys, setSurveys] = useState<Survey[]>([])
-  const [activeSurvey, setActiveSurvey] = useState<any>(null)
+  const [activeSurvey, setActiveSurvey] = useState<SurveyDetail | null>(null)
   const [sResponses, setSResponses] = useState<Record<string, number>>({})
-  const [sResult, setSResult] = useState<any>(null)
-  const [sociRatings, setSociRatings] = useState<any[]>([])
+  const [sResult, setSResult] = useState<SurveyResult | null>(null)
+  const [sociRatings, setSociRatings] = useState<OutgoingRating[]>([])
   const [sociForm, setSociForm] = useState<Record<string, number>>({})
-  const [trends, setTrends] = useState<any>(null)
+  const [trends, setTrends] = useState<Trends | null>(null)
   const [status, setStatus] = useState('')
 
   // Sleep form
@@ -74,15 +79,16 @@ export default function PsychDashboard() {
   const loadSurvey = async (id: number) => {
     const r = await authFetch(`${API}/api/v1/psych/survey/${id}`)
     const data = await r.json()
-    const q = { ...data, questions: typeof data.questions === 'string' ? JSON.parse(data.questions) : data.questions }
+    const q: SurveyDetail = { ...data, questions: typeof data.questions === 'string' ? JSON.parse(data.questions) : data.questions }
     setActiveSurvey(q)
     const init: Record<string, number> = {}
-    q.questions.forEach((q: any) => { init[q.id] = Math.ceil((q.scale_min + q.scale_max) / 2) })
+    q.questions.forEach(item => { init[item.id] = Math.ceil((item.scale_min + item.scale_max) / 2) })
     setSResponses(init)
     setSResult(null)
   }
 
   const submitSurvey = async () => {
+    if (!activeSurvey) return
     const r = await authFetch(`${API}/api/v1/psych/survey/submit`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ crew_id: CREW_ID, template_id: activeSurvey.id, responses: sResponses })
@@ -287,7 +293,7 @@ export default function PsychDashboard() {
             <div style={st.panel}>
               <h2 style={{ color: '#a855f7', marginTop: 0 }}>{activeSurvey.name}</h2>
               <p style={{ color: '#aaa' }}>{activeSurvey.description}</p>
-              {activeSurvey.questions.map((q: any) => (
+              {activeSurvey.questions.map(q => (
                 <div key={q.id} style={{ marginBottom: '16px' }}>
                   <div style={{ marginBottom: '6px', fontSize: '14px' }}>{q.text}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -366,11 +372,11 @@ export default function PsychDashboard() {
       {tab === 'trends' && (
         <>
           {!trends && <p style={{ color: '#555' }}>No trend data yet. Complete mood check-ins and sleep logs to populate charts.</p>}
-          {trends?.mood_trend?.length > 1 && (
+          {(trends?.mood_trend?.length ?? 0) > 1 && (
             <div style={st.panel}>
               <div style={{ color: '#2affe0', fontWeight: 700, marginBottom: '10px' }}>😊 30-Day Mood Trend</div>
               <ResponsiveContainer width="100%" height={150}>
-                <LineChart data={trends.mood_trend}>
+                <LineChart data={trends?.mood_trend}>
                   <XAxis dataKey="day" tick={{ fill: '#555', fontSize: 11 }} />
                   <YAxis domain={[1, 5]} ticks={[1,2,3,4,5]} tick={{ fill: '#555', fontSize: 11 }} />
                   <Tooltip />
@@ -379,11 +385,11 @@ export default function PsychDashboard() {
               </ResponsiveContainer>
             </div>
           )}
-          {trends?.sleep_trend?.length > 1 && (
+          {(trends?.sleep_trend?.length ?? 0) > 1 && (
             <div style={st.panel}>
               <div style={{ color: '#a855f7', fontWeight: 700, marginBottom: '10px' }}>💤 30-Day Sleep Trend</div>
               <ResponsiveContainer width="100%" height={150}>
-                <LineChart data={trends.sleep_trend}>
+                <LineChart data={trends?.sleep_trend}>
                   <XAxis dataKey="day" tick={{ fill: '#555', fontSize: 11 }} />
                   <YAxis domain={[0, 10]} tick={{ fill: '#555', fontSize: 11 }} />
                   <Tooltip />
@@ -392,11 +398,11 @@ export default function PsychDashboard() {
               </ResponsiveContainer>
             </div>
           )}
-          {trends?.workload_trend?.length > 1 && (
+          {(trends?.workload_trend?.length ?? 0) > 1 && (
             <div style={st.panel}>
               <div style={{ color: '#ffaa00', fontWeight: 700, marginBottom: '10px' }}>📊 Workload Score (NASA TLX)</div>
               <ResponsiveContainer width="100%" height={150}>
-                <LineChart data={trends.workload_trend}>
+                <LineChart data={trends?.workload_trend}>
                   <XAxis dataKey="day" tick={{ fill: '#555', fontSize: 11 }} />
                   <YAxis tick={{ fill: '#555', fontSize: 11 }} />
                   <Tooltip />

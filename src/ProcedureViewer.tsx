@@ -18,7 +18,6 @@ interface RunState {
 
 export default function ProcedureViewer() {
   const [procedures, setProcedures]   = useState<Procedure[]>([])
-  const [selected,   setSelected]     = useState<number | null>(null)
   const [run,        setRun]          = useState<RunState | null>(null)
   const [status,     setStatus]       = useState('')
   const [fullscreen, setFullscreen]   = useState(false)
@@ -32,11 +31,12 @@ export default function ProcedureViewer() {
       .then(setProcedures)
   }, [])
 
+  const currentStep = run?.current_step
   useEffect(() => {
-    if (run && stepRef.current) {
+    if (currentStep !== undefined && stepRef.current) {
       stepRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
-  }, [run?.current_step])
+  }, [currentStep])
 
   const startRun = async (pid: number) => {
     const r = await authFetch(`${API}/api/v1/scheduling/procedures/run`, {

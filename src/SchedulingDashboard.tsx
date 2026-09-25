@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { authFetch, currentUser } from './auth'
 
 const API = '/schedule'

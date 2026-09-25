@@ -7,12 +7,9 @@ import {
   MessageSquare, 
   ChevronRight, 
   RefreshCcw,
-  ShieldCheck,
   Cpu
 } from 'lucide-react';
 import { 
-  LineChart, 
-  Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -29,7 +26,7 @@ interface AiInsight {
   insight_type: string;
   severity: string;
   summary: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
   created_at: string;
 }
 
@@ -81,7 +78,7 @@ const AiDashboard: React.FC = () => {
     try {
       // In a real app, we'd have a specific GET endpoint for insights
       // For now, we simulate fetching from the Mission Assistant's broader context
-      const res = await authFetch('/astra/health'); // Just to check connectivity
+      await authFetch('/astra/health'); // Just to check connectivity
       // Mock data if API is still warming up in docker
       setInsights([
         { 

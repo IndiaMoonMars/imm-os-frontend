@@ -7,12 +7,18 @@ const CREW_ID = currentUser()
 interface Assignment { crew_id: string; task: string }
 interface BriefingAck { crew_id: string; item_index: number }
 
+interface EclssSnapshot {
+  lighting?: Record<string, { brightness: number; kelvin: number }>
+  fetched_at?: string
+  error?: string
+}
+
 interface Briefing {
   id: number
   mission_day: number
   created_by: string
   objectives: string
-  eclss_snapshot: any
+  eclss_snapshot: string | EclssSnapshot
   eva_summary: string
   assignments: Assignment[]
   acks: BriefingAck[]

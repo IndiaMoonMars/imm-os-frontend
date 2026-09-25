@@ -32,7 +32,6 @@ const DEFAULT_CHECKLIST = [
 export default function EvaDashboard() {
   const [plans, setPlans] = useState<EvaPlan[]>([])
   const [tools, setTools] = useState<Tool[]>([])
-  const [activePlan, setActivePlan] = useState<EvaPlan | null>(null)
   const [form, setForm] = useState<EvaPlan>({
     crew_members: ['ev1', 'ev2'],
     objectives: '',
@@ -154,7 +153,7 @@ export default function EvaDashboard() {
               Crew: {plan.crew_members?.join(', ')} | Duration: {plan.duration_minutes} min
             </div>
             <div style={{ color: '#ffaa00', fontWeight: 600, marginBottom: '8px', fontSize: '13px' }}>PRE-EVA CHECKLIST</div>
-            {(plan.checklist || []).map((item: any, idx: number) => (
+            {(plan.checklist || []).map((item, idx) => (
               <div key={idx} onClick={() => toggleChecklistItem(plan, idx)}
                 style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer',
                   padding: '6px 10px', borderRadius: '5px', marginBottom: '4px',

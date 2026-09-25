@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { authFetch, currentUser } from './auth'
 
 const API = '/comms'
@@ -30,15 +30,15 @@ export default function CommsDashboard() {
   const [status, setStatus] = useState('')
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const fetchInbox = async () => {
+  const fetchInbox = useCallback(async () => {
     const r = await authFetch(`${API}/api/v1/comms/inbox/${userId}?group=${group}`)
     if (r.ok) setInbox(await r.json())
-  }
+  }, [userId, group])
 
-  const fetchPending = async () => {
+  const fetchPending = useCallback(async () => {
     const r = await authFetch(`${API}/api/v1/comms/pending/${userId}`)
     if (r.ok) setPending(await r.json())
-  }
+  }, [userId])
 
   useEffect(() => {
     fetchInbox()
@@ -48,7 +48,7 @@ export default function CommsDashboard() {
       fetchPending()
     }, 3000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [group])
+  }, [fetchInbox, fetchPending])
 
   const sendMessage = async () => {
     setStatus('Transmitting...')
