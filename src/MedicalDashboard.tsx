@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { authFetch, currentUser } from './auth'
 
 const API = '/medical'
-const CREW_ID = 'EV1'
+const CREW_ID = currentUser()
 
 interface Reading { id: number; reading_type: string; value: number; unit: string; device: string; recorded_at: string }
 interface FoodEntry { id: number; meal_name: string; meal_type: string; calories: number; protein_g: number; carb_g: number; fat_g: number; logged_at: string }
@@ -46,12 +47,12 @@ export default function MedicalDashboard() {
 
   const fetchAll = async () => {
     const [rd, fl, md, qt, wk, wr] = await Promise.allSettled([
-      fetch(`${API}/api/v1/medical/readings/${CREW_ID}?requester_id=${CREW_ID}`).then(r => r.json()),
-      fetch(`${API}/api/v1/medical/food-log/${CREW_ID}`).then(r => r.json()),
-      fetch(`${API}/api/v1/medical/medications/${CREW_ID}`).then(r => r.json()),
-      fetch(`${API}/api/v1/medical/questionnaires`).then(r => r.json()),
-      fetch(`${API}/api/v1/medical/workouts/${CREW_ID}`).then(r => r.json()),
-      fetch(`${API}/api/v1/medical/week-report/${CREW_ID}`).then(r => r.json()),
+      authFetch(`${API}/api/v1/medical/readings/${CREW_ID}`).then(r => r.json()),
+      authFetch(`${API}/api/v1/medical/food-log/${CREW_ID}`).then(r => r.json()),
+      authFetch(`${API}/api/v1/medical/medications/${CREW_ID}`).then(r => r.json()),
+      authFetch(`${API}/api/v1/medical/questionnaires`).then(r => r.json()),
+      authFetch(`${API}/api/v1/medical/workouts/${CREW_ID}`).then(r => r.json()),
+      authFetch(`${API}/api/v1/medical/week-report/${CREW_ID}`).then(r => r.json()),
     ])
     if (rd.status === 'fulfilled') setReadings(rd.value)
     if (fl.status === 'fulfilled') {
@@ -69,11 +70,11 @@ export default function MedicalDashboard() {
 
   useEffect(() => {
     if (!foodSearch) { setFoodItems([]); return }
-    fetch(`${API}/api/v1/medical/foods?q=${foodSearch}`).then(r => r.json()).then(setFoodItems)
+    authFetch(`${API}/api/v1/medical/foods?q=${foodSearch}`).then(r => r.json()).then(setFoodItems)
   }, [foodSearch])
 
   const submitReading = async () => {
-    const r = await fetch(`${API}/api/v1/medical/reading`, {
+    const r = await authFetch(`${API}/api/v1/medical/reading`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ crew_id: CREW_ID, ...readingForm, value: parseFloat(readingForm.value) })
     })
@@ -81,7 +82,7 @@ export default function MedicalDashboard() {
   }
 
   const logFood = async () => {
-    const r = await fetch(`${API}/api/v1/medical/food-log`, {
+    const r = await authFetch(`${API}/api/v1/medical/food-log`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ crew_id: CREW_ID, ...foodForm })
     })
@@ -89,7 +90,7 @@ export default function MedicalDashboard() {
   }
 
   const addMed = async () => {
-    const r = await fetch(`${API}/api/v1/medical/medication`, {
+    const r = await authFetch(`${API}/api/v1/medical/medication`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ crew_id: CREW_ID, ...medForm, dose_mg: parseFloat(medForm.dose_mg as any), stock_count: +medForm.stock_count })
     })
@@ -97,7 +98,7 @@ export default function MedicalDashboard() {
   }
 
   const logWorkout = async () => {
-    const r = await fetch(`${API}/api/v1/medical/workout`, {
+    const r = await authFetch(`${API}/api/v1/medical/workout`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ crew_id: CREW_ID, ...wkForm, avg_hr: wkForm.avg_hr ? +wkForm.avg_hr : null, calories_burned: wkForm.calories_burned ? +wkForm.calories_burned : null })
     })
@@ -105,7 +106,7 @@ export default function MedicalDashboard() {
   }
 
   const loadQuestionnaire = async (id: number) => {
-    const r = await fetch(`${API}/api/v1/medical/questionnaire/${id}`)
+    const r = await authFetch(`${API}/api/v1/medical/questionnaire/${id}`)
     const data = await r.json()
     const q = { ...data, questions: typeof data.questions === 'string' ? JSON.parse(data.questions) : data.questions }
     setActiveQuestionnaire(q)
@@ -116,7 +117,7 @@ export default function MedicalDashboard() {
   }
 
   const submitQuestionnaire = async () => {
-    const r = await fetch(`${API}/api/v1/medical/questionnaire/submit`, {
+    const r = await authFetch(`${API}/api/v1/medical/questionnaire/submit`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ crew_id: CREW_ID, template_id: activeQuestionnaire.id, responses: qResponses })
     })
@@ -311,7 +312,7 @@ export default function MedicalDashboard() {
                     </div>
                   )}
                   <button style={{ ...btn('#2a7fff'), marginTop: '6px', padding: '4px 12px', fontSize: '12px' }}
-                    onClick={async () => { await fetch(`${API}/api/v1/medical/medication/${m.id}/taken`, { method: 'PATCH' }); fetchAll() }}>
+                    onClick={async () => { await authFetch(`${API}/api/v1/medical/medication/${m.id}/taken`, { method: 'PATCH' }); fetchAll() }}>
                     Take Dose
                   </button>
                 </div>

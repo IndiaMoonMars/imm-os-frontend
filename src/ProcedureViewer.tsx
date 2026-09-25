@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { authFetch, currentUser } from './auth'
 
 const API = '/schedule'
 
@@ -23,10 +24,10 @@ export default function ProcedureViewer() {
   const [fullscreen, setFullscreen]   = useState(false)
   const stepRef = useRef<HTMLDivElement>(null)
 
-  const CREW_ID = 'EV1'
+  const CREW_ID = currentUser()
 
   useEffect(() => {
-    fetch(`${API}/api/v1/scheduling/procedures`)
+    authFetch(`${API}/api/v1/scheduling/procedures`)
       .then(r => r.ok ? r.json() : [])
       .then(setProcedures)
   }, [])
@@ -38,7 +39,7 @@ export default function ProcedureViewer() {
   }, [run?.current_step])
 
   const startRun = async (pid: number) => {
-    const r = await fetch(`${API}/api/v1/scheduling/procedures/run`, {
+    const r = await authFetch(`${API}/api/v1/scheduling/procedures/run`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ procedure_id: pid, crew_id: CREW_ID })
     })
@@ -49,13 +50,13 @@ export default function ProcedureViewer() {
   }
 
   const loadRun = async (runId: number) => {
-    const r = await fetch(`${API}/api/v1/scheduling/runs/${runId}`)
+    const r = await authFetch(`${API}/api/v1/scheduling/runs/${runId}`)
     if (r.ok) setRun(await r.json())
   }
 
   const completeStep = async () => {
     if (!run) return
-    const r = await fetch(`${API}/api/v1/scheduling/runs/${run.run_id}/step`, {
+    const r = await authFetch(`${API}/api/v1/scheduling/runs/${run.run_id}/step`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ crew_id: CREW_ID })
     })
@@ -71,7 +72,7 @@ export default function ProcedureViewer() {
 
   const abortRun = async () => {
     if (!run) return
-    await fetch(`${API}/api/v1/scheduling/runs/${run.run_id}/abort`, { method: 'POST' })
+    await authFetch(`${API}/api/v1/scheduling/runs/${run.run_id}/abort`, { method: 'POST' })
     setRun(null)
     setFullscreen(false)
     setStatus('Procedure aborted.')

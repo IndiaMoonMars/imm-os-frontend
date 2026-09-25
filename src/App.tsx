@@ -9,6 +9,7 @@ import ProcedureViewer from './ProcedureViewer'
 import MedicalDashboard from './MedicalDashboard'
 import PsychDashboard from './PsychDashboard'
 import AiDashboard from './AiDashboard'
+import { authFetch, currentUser, logout } from './auth'
 
 interface LightingState { brightness: number; kelvin: number }
 
@@ -40,7 +41,7 @@ function App() {
 
   const fetchEclssState = async () => {
     try {
-      const res = await fetch('/eclss/api/v1/eclss/lighting')
+      const res = await authFetch('/eclss/api/v1/eclss/lighting')
       if (res.ok) setLighting(await res.json())
     } catch { setStatusMsg('Network Error: Could not reach ECLSS API') }
   }
@@ -54,7 +55,7 @@ function App() {
   const handleUpdate = async (zone: string, b: number, k: number) => {
     try {
       setStatusMsg(`Updating ${zone}...`)
-      const res = await fetch(`/eclss/api/v1/eclss/lighting/${zone}`, {
+      const res = await authFetch(`/eclss/api/v1/eclss/lighting/${zone}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ brightness: b, kelvin: k })
       })
@@ -78,6 +79,14 @@ function App() {
             {tab.label}
           </button>
         ))}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px', whiteSpace: 'nowrap' }}>
+          <span style={{ color: '#888', fontSize: '12px' }}>{currentUser()}</span>
+          <button onClick={logout}
+            style={{ background: 'transparent', color: '#2a7fff', border: '1px solid #2a7fff55', borderRadius: '4px',
+              padding: '4px 10px', fontSize: '12px', cursor: 'pointer' }}>
+            Log out
+          </button>
+        </div>
       </div>
 
       {activeTab === 'eclss' && (

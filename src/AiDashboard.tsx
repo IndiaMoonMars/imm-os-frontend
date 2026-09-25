@@ -21,6 +21,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
+import { authFetch, currentUser } from './auth'
 
 interface AiInsight {
   id: number;
@@ -80,7 +81,7 @@ const AiDashboard: React.FC = () => {
     try {
       // In a real app, we'd have a specific GET endpoint for insights
       // For now, we simulate fetching from the Mission Assistant's broader context
-      const res = await fetch('/astra/health'); // Just to check connectivity
+      const res = await authFetch('/astra/health'); // Just to check connectivity
       // Mock data if API is still warming up in docker
       setInsights([
         { 
@@ -123,10 +124,10 @@ const AiDashboard: React.FC = () => {
     setIsTyping(true);
 
     try {
-      const response = await fetch('/astra/query', {
+      const response = await authFetch('/astra/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ crew_id: 'COMMANDER', query: input })
+        body: JSON.stringify({ crew_id: currentUser(), query: input })
       });
       const data = await response.json();
       

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
+import { authFetch, currentUser } from './auth'
 
 const API = '/comms'
-const CREW_ID = 'EV1'
+const CREW_ID = currentUser()
 
 interface Assignment { crew_id: string; task: string }
 interface BriefingAck { crew_id: string; item_index: number }
@@ -23,16 +24,16 @@ export default function BriefingDashboard() {
   const [form, setForm] = useState({
     objectives: '',
     eva_summary: '',
-    assignments: [{ crew_id: 'EV1', task: '' }, { crew_id: 'EV2', task: '' }]
+    assignments: [{ crew_id: 'ev1', task: '' }, { crew_id: 'ev2', task: '' }]
   })
   const [view, setView] = useState<'today'|'create'>('today')
 
   const fetchToday = async () => {
-    const r = await fetch(`${API}/api/v1/briefing/latest/today`)
+    const r = await authFetch(`${API}/api/v1/briefing/latest/today`)
     if (r.ok) {
       const b = await r.json()
       // Hydrate acks
-      const r2 = await fetch(`${API}/api/v1/briefing/${b.id}`)
+      const r2 = await authFetch(`${API}/api/v1/briefing/${b.id}`)
       if (r2.ok) setBriefing(await r2.json())
     } else {
       setBriefing(null)
@@ -43,7 +44,7 @@ export default function BriefingDashboard() {
 
   const createBriefing = async () => {
     setStatus("Creating today's briefing…")
-    const r = await fetch(`${API}/api/v1/briefing/create`, {
+    const r = await authFetch(`${API}/api/v1/briefing/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ created_by: CREW_ID, ...form })
@@ -60,7 +61,7 @@ export default function BriefingDashboard() {
 
   const ackItem = async (idx: number) => {
     if (!briefing) return
-    const r = await fetch(`${API}/api/v1/briefing/${briefing.id}/ack`, {
+    const r = await authFetch(`${API}/api/v1/briefing/${briefing.id}/ack`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ crew_id: CREW_ID, item_index: idx })

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, Legend } from 'recharts'
+import { authFetch, currentUser } from './auth'
 
 const API = '/psych'
-const CREW_ID = 'EV1'
+const CREW_ID = currentUser()
 
 interface SleepEntry { id: number; duration_min: number; quality_score: number; source: string; mission_day: number; sleep_onset: string; wake_time: string }
 interface MoodEntry { id: number; period: string; score: number; note: string; mission_day: number; checked_at: string }
@@ -14,7 +15,8 @@ type Tab = 'sleep' | 'mood' | 'surveys' | 'sociogram' | 'trends'
 const MOOD_EMOJI = ['', '😔', '😟', '😐', '😊', '😄']
 const MOOD_LABELS = ['', 'Very Low', 'Low', 'Neutral', 'Good', 'Excellent']
 const MOOD_COLORS = ['', '#ff5c5c', '#ff8c42', '#ffaa00', '#2affe0', '#00ff7f']
-const CREW_MEMBERS = ['EV1', 'EV2', 'EV3', 'CDR']
+// Keycloak usernames (lower-case) double as crew IDs
+const CREW_MEMBERS = ['ev1', 'ev2', 'ev3', 'cdr']
 
 export default function PsychDashboard() {
   const [tab, setTab] = useState<Tab>('sleep')
@@ -40,11 +42,11 @@ export default function PsychDashboard() {
 
   const fetchAll = async () => {
     const [sl, mo, sv, so, tr] = await Promise.allSettled([
-      fetch(`${API}/api/v1/psych/sleep/${CREW_ID}?days=30`).then(r => r.json()),
-      fetch(`${API}/api/v1/psych/mood/${CREW_ID}?days=30`).then(r => r.json()),
-      fetch(`${API}/api/v1/psych/surveys`).then(r => r.json()),
-      fetch(`${API}/api/v1/psych/sociogram/my-ratings/${CREW_ID}`).then(r => r.json()),
-      fetch(`${API}/api/v1/psych/trends/${CREW_ID}?requester_id=${CREW_ID}`).then(r => r.json()),
+      authFetch(`${API}/api/v1/psych/sleep/${CREW_ID}?days=30`).then(r => r.json()),
+      authFetch(`${API}/api/v1/psych/mood/${CREW_ID}?days=30`).then(r => r.json()),
+      authFetch(`${API}/api/v1/psych/surveys`).then(r => r.json()),
+      authFetch(`${API}/api/v1/psych/sociogram/my-ratings/${CREW_ID}`).then(r => r.json()),
+      authFetch(`${API}/api/v1/psych/trends/${CREW_ID}`).then(r => r.json()),
     ])
     if (sl.status === 'fulfilled') { setSleepLog(sl.value.entries || []); setSleep7dayAvg(sl.value['7day_avg_hours'] || 0) }
     if (mo.status === 'fulfilled') { setMoodLog(mo.value.entries || []); setMood7dayAvg(mo.value['7day_avg'] || 0) }
@@ -54,7 +56,7 @@ export default function PsychDashboard() {
   }
 
   const logSleep = async () => {
-    const r = await fetch(`${API}/api/v1/psych/sleep`, {
+    const r = await authFetch(`${API}/api/v1/psych/sleep`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ crew_id: CREW_ID, ...sleepForm })
     })
@@ -62,7 +64,7 @@ export default function PsychDashboard() {
   }
 
   const logMood = async () => {
-    const r = await fetch(`${API}/api/v1/psych/mood`, {
+    const r = await authFetch(`${API}/api/v1/psych/mood`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ crew_id: CREW_ID, ...moodForm })
     })
@@ -70,7 +72,7 @@ export default function PsychDashboard() {
   }
 
   const loadSurvey = async (id: number) => {
-    const r = await fetch(`${API}/api/v1/psych/survey/${id}`)
+    const r = await authFetch(`${API}/api/v1/psych/survey/${id}`)
     const data = await r.json()
     const q = { ...data, questions: typeof data.questions === 'string' ? JSON.parse(data.questions) : data.questions }
     setActiveSurvey(q)
@@ -81,7 +83,7 @@ export default function PsychDashboard() {
   }
 
   const submitSurvey = async () => {
-    const r = await fetch(`${API}/api/v1/psych/survey/submit`, {
+    const r = await authFetch(`${API}/api/v1/psych/survey/submit`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ crew_id: CREW_ID, template_id: activeSurvey.id, responses: sResponses })
     })
@@ -94,7 +96,7 @@ export default function PsychDashboard() {
     let ok = true
     for (const [ratee_id, score] of Object.entries(sociForm)) {
       if (ratee_id === CREW_ID) continue
-      const r = await fetch(`${API}/api/v1/psych/sociogram`, {
+      const r = await authFetch(`${API}/api/v1/psych/sociogram`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rater_id: CREW_ID, ratee_id, comfort_score: score })
       })

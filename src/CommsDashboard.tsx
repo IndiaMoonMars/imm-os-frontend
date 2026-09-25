@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { authFetch, currentUser } from './auth'
 
 const API = '/comms'
 
@@ -20,7 +21,7 @@ interface PendingMsg {
 }
 
 export default function CommsDashboard() {
-  const [userId] = useState('astro-EV1')
+  const [userId] = useState(currentUser())
   const [group,  setGroup]  = useState<'astro'|'mcc'>('mcc')
   const [inbox,  setInbox]  = useState<Message[]>([])
   const [pending, setPending] = useState<PendingMsg[]>([])
@@ -30,12 +31,12 @@ export default function CommsDashboard() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fetchInbox = async () => {
-    const r = await fetch(`${API}/api/v1/comms/inbox/${userId}?group=${group}`)
+    const r = await authFetch(`${API}/api/v1/comms/inbox/${userId}?group=${group}`)
     if (r.ok) setInbox(await r.json())
   }
 
   const fetchPending = async () => {
-    const r = await fetch(`${API}/api/v1/comms/pending/${userId}`)
+    const r = await authFetch(`${API}/api/v1/comms/pending/${userId}`)
     if (r.ok) setPending(await r.json())
   }
 
@@ -51,7 +52,7 @@ export default function CommsDashboard() {
 
   const sendMessage = async () => {
     setStatus('Transmitting...')
-    const r = await fetch(`${API}/api/v1/comms/message`, {
+    const r = await authFetch(`${API}/api/v1/comms/message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sender_id: userId, ...compose })

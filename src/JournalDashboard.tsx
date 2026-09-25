@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
+import { authFetch, currentUser } from './auth'
 
 const API = '/comms'
-const CREW_ID = 'EV1'
+const CREW_ID = currentUser()
 
 interface JournalEntry {
   id: number
@@ -25,7 +26,7 @@ export default function JournalDashboard() {
   const chunksRef = useRef<Blob[]>([])
 
   const fetchEntries = async () => {
-    const r = await fetch(`${API}/api/v1/journal/entries/${CREW_ID}?requester_role=author`)
+    const r = await authFetch(`${API}/api/v1/journal/entries/${CREW_ID}`)
     if (r.ok) setEntries(await r.json())
   }
 
@@ -33,7 +34,7 @@ export default function JournalDashboard() {
 
   const submitJournal = async () => {
     setStatus('Saving entry...')
-    const r = await fetch(`${API}/api/v1/journal/entry`, {
+    const r = await authFetch(`${API}/api/v1/journal/entry`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -75,7 +76,7 @@ export default function JournalDashboard() {
   const uploadAudio = async () => {
     if (!audioBlob) return
     setStatus('Saving voice memo...')
-    const r = await fetch(`${API}/api/v1/journal/entry`, {
+    const r = await authFetch(`${API}/api/v1/journal/entry`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ author_id: CREW_ID, title: form.title || 'Voice Memo', media_type: 'voice', tags: [] })
@@ -84,7 +85,7 @@ export default function JournalDashboard() {
     const { journal_id } = await r.json()
     const fd = new FormData()
     fd.append('file', audioBlob, 'voice_memo.webm')
-    const r2 = await fetch(`${API}/api/v1/journal/upload/${journal_id}`, { method: 'POST', body: fd })
+    const r2 = await authFetch(`${API}/api/v1/journal/upload/${journal_id}`, { method: 'POST', body: fd })
     if (r2.ok) {
       setStatus('✓ Voice memo saved.')
       setAudioBlob(null)

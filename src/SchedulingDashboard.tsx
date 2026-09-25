@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { authFetch, currentUser } from './auth'
 
 const API = '/schedule'
 
@@ -35,14 +36,14 @@ export default function SchedulingDashboard() {
     deadline: '', description: ''
   })
   // New-project form
-  const [projForm, setProjForm] = useState({ name: '', owner_id: 'EV1', start_date: '', end_date: '' })
+  const [projForm, setProjForm] = useState({ name: '', owner_id: currentUser(), start_date: '', end_date: '' })
   const [showCreate, setShowCreate] = useState<'task' | 'project' | null>(null)
 
   const fetchAll = async () => {
     const [pr, ta, mi] = await Promise.all([
-      fetch(`${API}/api/v1/scheduling/projects`).then(r => r.ok ? r.json() : []),
-      fetch(`${API}/api/v1/scheduling/tasks`).then(r => r.ok ? r.json() : []),
-      fetch(`${API}/api/v1/scheduling/milestones`).then(r => r.ok ? r.json() : []),
+      authFetch(`${API}/api/v1/scheduling/projects`).then(r => r.ok ? r.json() : []),
+      authFetch(`${API}/api/v1/scheduling/tasks`).then(r => r.ok ? r.json() : []),
+      authFetch(`${API}/api/v1/scheduling/milestones`).then(r => r.ok ? r.json() : []),
     ])
     setProjects(pr); setTasks(ta); setMilestones(mi)
   }
@@ -50,7 +51,7 @@ export default function SchedulingDashboard() {
   useEffect(() => { fetchAll(); const iv = setInterval(fetchAll, 15000); return () => clearInterval(iv) }, [])
 
   const createProject = async () => {
-    const r = await fetch(`${API}/api/v1/scheduling/projects`, {
+    const r = await authFetch(`${API}/api/v1/scheduling/projects`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(projForm)
     })
@@ -64,7 +65,7 @@ export default function SchedulingDashboard() {
       ...taskForm,
       deadline: taskForm.deadline ? new Date(taskForm.deadline).toISOString() : null
     }
-    const r = await fetch(`${API}/api/v1/scheduling/tasks`, {
+    const r = await authFetch(`${API}/api/v1/scheduling/tasks`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
@@ -73,7 +74,7 @@ export default function SchedulingDashboard() {
   }
 
   const updateStatus = async (tid: number, status: string) => {
-    await fetch(`${API}/api/v1/scheduling/tasks/${tid}`, {
+    await authFetch(`${API}/api/v1/scheduling/tasks/${tid}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })
     })
@@ -81,7 +82,7 @@ export default function SchedulingDashboard() {
   }
 
   const reachMilestone = async (mid: number) => {
-    await fetch(`${API}/api/v1/scheduling/milestones/${mid}/reach`, { method: 'PATCH' })
+    await authFetch(`${API}/api/v1/scheduling/milestones/${mid}/reach`, { method: 'PATCH' })
     fetchAll()
   }
 

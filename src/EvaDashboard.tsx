@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { authFetch } from './auth'
 
 interface EvaPlan {
   id?: number
@@ -33,7 +34,7 @@ export default function EvaDashboard() {
   const [tools, setTools] = useState<Tool[]>([])
   const [activePlan, setActivePlan] = useState<EvaPlan | null>(null)
   const [form, setForm] = useState<EvaPlan>({
-    crew_members: ['EV1', 'EV2'],
+    crew_members: ['ev1', 'ev2'],
     objectives: '',
     duration_minutes: 60,
     tools_required: [],
@@ -44,14 +45,14 @@ export default function EvaDashboard() {
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch('/eva/api/v1/eva/plans')
+      const res = await authFetch('/eva/api/v1/eva/plans')
       if (res.ok) setPlans(await res.json())
     } catch { /* offline */ }
   }
 
   const fetchTools = async () => {
     try {
-      const res = await fetch('/eva/api/v1/eva/tools')
+      const res = await authFetch('/eva/api/v1/eva/tools')
       if (res.ok) setTools(await res.json())
     } catch { /* offline */ }
   }
@@ -65,7 +66,7 @@ export default function EvaDashboard() {
 
   const submitPlan = async () => {
     setStatusMsg('Submitting EVA plan to Postgres...')
-    const res = await fetch('/eva/api/v1/eva/plan', {
+    const res = await authFetch('/eva/api/v1/eva/plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
@@ -84,7 +85,7 @@ export default function EvaDashboard() {
     const updated = plan.checklist.map((item, i) =>
       i === idx ? { ...item, done: !item.done } : item
     )
-    await fetch(`/eva/api/v1/eva/plan/${plan.id}/checklist`, {
+    await authFetch(`/eva/api/v1/eva/plan/${plan.id}/checklist`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ checklist: updated }),
