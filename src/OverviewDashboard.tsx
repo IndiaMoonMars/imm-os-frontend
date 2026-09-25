@@ -95,7 +95,8 @@ export default function OverviewDashboard({ onNavigate }: { onNavigate: (k: TabK
       <div className="grid-2">
         <Panel title="Edge nodes" icon={<Server size={16} />}>
           <div className="node-list">
-            {Object.entries(NODE_META).map(([id, meta]) => {
+            {[...new Set([...Object.keys(NODE_META), ...Object.keys(data?.readings ?? {})])].map(id => {
+              const meta = NODE_META[id] ?? { hw: 'Edge node', zone: Object.values(data?.readings[id] ?? {})[0]?.zone ?? 'unassigned' }
               const r = data?.readings[id]
               const vals = r ? Object.values(r) : []
               const newest = vals.map(v => v.timestamp).filter(Boolean).sort().pop()

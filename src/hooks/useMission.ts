@@ -27,7 +27,7 @@ export function usePoll<T>(url: string, intervalMs: number): { data: T | null; e
 
 // ── Telemetry (backend /api/telemetry) ────────────────────────────
 
-export interface Reading { value: number; unit: string; timestamp?: string; simulated?: boolean | string }
+export interface Reading { value: number; unit: string; timestamp?: string; simulated?: boolean | string; sensor?: string; zone?: string }
 export type NodeReadings = Record<string, Reading>
 export interface LatestTelemetry { readings: Record<string, NodeReadings>; _meta?: { source: string } }
 
