@@ -9,11 +9,12 @@ import ProcedureViewer from './ProcedureViewer'
 import MedicalDashboard from './MedicalDashboard'
 import PsychDashboard from './PsychDashboard'
 import AiDashboard from './AiDashboard'
+import InventoryDashboard from './InventoryDashboard'
 import { authFetch, currentUser, logout } from './auth'
 
 interface LightingState { brightness: number; kelvin: number }
 
-type Tab = 'eclss' | 'eva' | 'comms' | 'journal' | 'briefing' | 'schedule' | 'procedures' | 'medical' | 'psych' | 'ai'
+type Tab = 'eclss' | 'eva' | 'comms' | 'journal' | 'briefing' | 'schedule' | 'procedures' | 'medical' | 'psych' | 'inventory' | 'ai'
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'eclss',      label: '🌿 ECLSS'       },
@@ -25,6 +26,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'procedures', label: '📑 Procedures'  },
   { key: 'medical',    label: '🏥 Medical'     },
   { key: 'psych',      label: '🧠 Psychology'  },
+  { key: 'inventory',  label: '📦 Inventory'   },
   { key: 'ai',         label: '🤖 AI & Autonomy' },
 ]
 
@@ -124,6 +126,7 @@ function App() {
       {activeTab === 'procedures' && <ProcedureViewer />}
       {activeTab === 'medical'    && <MedicalDashboard />}
       {activeTab === 'psych'      && <PsychDashboard />}
+      {activeTab === 'inventory'  && <InventoryDashboard />}
       {activeTab === 'ai'         && <AiDashboard />}
     </div>
   )
