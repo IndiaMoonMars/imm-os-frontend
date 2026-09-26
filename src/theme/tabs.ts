@@ -1,11 +1,11 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   Activity, Bot, BookOpen, Boxes, Brain, CalendarRange, ClipboardCheck, Footprints,
-  Gauge, Leaf, Radio, ScrollText,
+  Gauge, Leaf, Radio, RadioTower, ScrollText,
 } from 'lucide-react'
 
 export type TabKey =
-  | 'overview' | 'eclss' | 'eva' | 'comms' | 'journal' | 'briefing' | 'schedule'
+  | 'overview' | 'sensors' | 'eclss' | 'eva' | 'comms' | 'journal' | 'briefing' | 'schedule'
   | 'procedures' | 'medical' | 'psych' | 'inventory' | 'ai'
 
 export type HeroArt =
@@ -37,6 +37,8 @@ export const TABS: TabDef[] = [
   { key: 'procedures', label: 'Procedures',    title: 'Procedure Library',       tagline: 'Step-by-step runs with sign-off and abort paths',
     group: 'Mission', icon: ClipboardCheck, accent: '#a3e635', accent2: '#d9f99d', art: 'checklist', code: 'MSN-03' },
 
+  { key: 'sensors',    label: 'Sensors',       title: 'Live Sensor Feed',        tagline: 'Every sensor on every node, in real time',
+    group: 'Habitat', icon: RadioTower, accent: '#38bdf8', accent2: '#bae6fd', art: 'signal', code: 'HAB-00' },
   { key: 'eclss',      label: 'Life Support',  title: 'ECLSS · Life Support',    tagline: 'Atmosphere, climate and circadian lighting control',
     group: 'Habitat', icon: Leaf, accent: '#34d399', accent2: '#a7f3d0', art: 'airflow', code: 'HAB-01' },
   { key: 'inventory',  label: 'Inventory',     title: 'Inventory & Logistics',   tagline: 'Stock, barcode scanning, tools, incidents and repairs',

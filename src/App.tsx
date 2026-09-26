@@ -15,6 +15,7 @@ import MedicalDashboard from './MedicalDashboard'
 import PsychDashboard from './PsychDashboard'
 import AiDashboard from './AiDashboard'
 import InventoryDashboard from './InventoryDashboard'
+import SensorsDashboard from './SensorsDashboard'
 import { TABS, tabByKey, type TabKey } from './theme/tabs'
 
 // Existing module dashboards, shown under the tab's hero banner
@@ -54,6 +55,7 @@ function App() {
   return (
     <Shell active={active} onSelect={select}>
       {active === 'overview' && <ModuleBoundary name="Overview"><OverviewDashboard onNavigate={select} /></ModuleBoundary>}
+      {active === 'sensors' && <ModuleBoundary name="Sensors"><SensorsDashboard /></ModuleBoundary>}
       {active === 'eclss' && <ModuleBoundary name="Life Support"><EclssDashboard /></ModuleBoundary>}
       {Module && (
         <div className="tab-body">
