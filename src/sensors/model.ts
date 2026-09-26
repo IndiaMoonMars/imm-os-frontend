@@ -10,7 +10,18 @@ export const m = (label: string, unit: string, dp: number): MetricDef => ({ labe
 export const CATALOG: Record<string, SensorDef> = {
   bme280: { label: 'Climate', hw: 'BME280', every: 1, metrics: { temp: m('Temperature', '°C', 1), hum: m('Humidity', '%', 1), pres: m('Pressure', 'hPa', 1) } },
   scd40: { label: 'CO₂', hw: 'SCD40', every: 5, metrics: { co2_ppm: m('CO₂', 'ppm', 0), temp: m('Temperature', '°C', 1), hum: m('Humidity', '%', 1) } },
-  o2: { label: 'Oxygen', hw: 'Galvanic O₂ cell', every: 2, metrics: { o2_pct: m('O₂', '%', 2) } },
+  o2: { label: 'Oxygen', hw: 'O₂ sensor', every: 2, metrics: { o2_pct: m('O₂', '%', 2) } },
+  mq4: {
+    label: 'Methane', hw: 'MQ-4 · ESP32 board', every: 1, note: 'ppm appears after the 3 min warm-up and CAL_MQ4 in clean air',
+    metrics: { ch4_ppm: m('CH₄', 'ppm', 1), rs_r0: m('Rs/R0', '×', 2), vout_mv: m('Sensor output', 'mV', 0) },
+  },
+  bno055: {
+    label: 'Orientation', hw: 'BNO055 · ESP32 board', every: 1, note: 'rotate the board slowly until calibration reads 3',
+    metrics: {
+      heading_deg: m('Heading', '°', 1), roll_deg: m('Roll', '°', 1), pitch_deg: m('Pitch', '°', 1),
+      lin_acc_ms2: m('Motion', 'm/s²', 2), imu_calib: m('Calibration', '/3', 0),
+    },
+  },
   mq7: { label: 'Carbon monoxide', hw: 'MQ-7 + STM32', every: 150, note: 'one reading per 150 s heater cycle', metrics: { co_ppm: m('CO', 'ppm', 1) } },
   tsl2561: { label: 'Light', hw: 'TSL2561', every: 1, metrics: { lux: m('Illuminance', 'lux', 0) } },
   ina219: { label: 'Power bus', hw: 'INA219', every: 1, metrics: { voltage_v: m('Voltage', 'V', 2), current_ma: m('Current', 'mA', 0), power_mw: m('Power', 'mW', 0) } },
