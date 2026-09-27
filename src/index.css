@@ -471,3 +471,20 @@ input[type='range']::-moz-range-thumb { width: 14px; height: 14px; border-radius
 .sensor-foot { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
 .sensor-foot span { display: inline-flex; align-items: center; gap: 4px; }
 .sensor-note { font-size: 11px; color: var(--warn); }
+.sensor-about { font-size: 11px; color: var(--text-3); line-height: 1.4; }
+.sensor-checks { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 4px; }
+.sensor-checks-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 6px; }
+.sensor-checks-head strong { font-size: 13px; }
+.sensor-checks-head small { flex-basis: 100%; font-size: 11px; color: var(--text-3); }
+.sensor-check { display: grid; grid-template-columns: 16px 90px minmax(120px, 190px) 1fr; column-gap: 10px; align-items: baseline;
+  font-size: 12.5px; padding: 3px 0; }
+.sensor-check .mark { color: var(--lvl); font-weight: 700; text-align: center; }
+.sensor-check .who { color: var(--text-3); font-size: 11.5px; }
+.sensor-check .what { color: var(--text-2); }
+.sensor-check .val { font-family: var(--font-mono); font-size: 12px; }
+.sensor-check .why { grid-column: 3 / -1; color: var(--lvl); font-size: 11.5px; }
+@media (max-width: 640px) {
+  .sensor-check { grid-template-columns: 16px 1fr; }
+  .sensor-check .who { display: none; }
+  .sensor-check .val, .sensor-check .why { grid-column: 2; }
+}

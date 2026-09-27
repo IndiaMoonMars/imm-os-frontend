@@ -8,6 +8,8 @@ import {
   CATALOG, FRESH_COLOR, ageLabel, applyFrame, applySnapshot, freshness, m, rateHz,
   type SnapshotEntry, type Stream,
 } from './sensors/model'
+import { sensorChecks, type Check } from './sensors/checks'
+import { LEVEL_COLOR } from './theme/levels'
 import { tabByKey } from './theme/tabs'
 
 // ── View ────────────────────────────────────────────────────────────
@@ -89,6 +91,7 @@ export default function SensorsDashboard() {
           <div className="sensor-grid">
             {list.map(s => <SensorCard key={s.key} s={s} now={now} />)}
           </div>
+          <SensorChecks checks={sensorChecks(list.filter(s => freshness(s.sensor, (now - s.ts) / 1000) === 'fresh'))} />
         </Panel>
       ))}
     </div>
@@ -133,6 +136,32 @@ function SensorCard({ s, now }: { s: Stream; now: number }) {
         <span>{fr === 'offline' ? 'no data ' : ''}{ageLabel(age)}</span>
       </div>
       {def?.note && fr !== 'fresh' && <small className="sensor-note">{def.note}</small>}
+      {def?.about && <small className="sensor-about">{def.about}</small>}
+    </div>
+  )
+}
+
+const CHECK_MARK: Record<string, string> = { ok: '✓', warn: '!', crit: '✗', idle: '·' }
+
+function SensorChecks({ checks }: { checks: Check[] }) {
+  if (!checks.length) return null
+  const bad = checks.filter(c => c.level === 'crit').length, warn = checks.filter(c => c.level === 'warn').length
+  return (
+    <div className="sensor-checks">
+      <div className="sensor-checks-head">
+        <strong>Are the readings right?</strong>
+        <Pill tone={bad ? 'crit' : warn ? 'warn' : 'ok'}>{bad ? `${bad} wrong` : warn ? `${warn} to look at` : 'all consistent'}</Pill>
+        <small>each real value against physics and against the other sensors · hands-on tests: tools/verify_esp32.py on the Pi</small>
+      </div>
+      {checks.map(c => (
+        <div key={c.sensor + c.name} className="sensor-check" style={{ '--lvl': LEVEL_COLOR[c.level] } as CSSProperties}>
+          <span className="mark">{CHECK_MARK[c.level]}</span>
+          <span className="who">{c.sensor}</span>
+          <span className="what">{c.name}</span>
+          <span className="val">{c.detail}</span>
+          {c.hint && (c.level === 'warn' || c.level === 'crit') && <small className="why">{c.hint}</small>}
+        </div>
+      ))}
     </div>
   )
 }

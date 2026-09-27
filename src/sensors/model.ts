@@ -3,23 +3,41 @@ import type { RealtimeFrame } from '../hooks/useRealtime'
 // ── What each sensor is and how often it reports (edge drivers) ──────
 
 export interface MetricDef { label: string; unit: string; dp: number }
-export interface SensorDef { label: string; hw: string; every: number; note?: string; metrics: Record<string, MetricDef> }
+export interface SensorDef {
+  label: string; hw: string; every: number
+  note?: string                 // shown while the stream is not fresh
+  about?: string                // what the sensor can and cannot measure, always shown
+  metrics: Record<string, MetricDef>
+}
 
 export const m = (label: string, unit: string, dp: number): MetricDef => ({ label, unit, dp })
 
 export const CATALOG: Record<string, SensorDef> = {
-  bme280: { label: 'Climate', hw: 'BME280', every: 1, metrics: { temp: m('Temperature', '°C', 1), hum: m('Humidity', '%', 1), pres: m('Pressure', 'hPa', 1) } },
-  scd40: { label: 'CO₂', hw: 'SCD40', every: 5, metrics: { co2_ppm: m('CO₂', 'ppm', 0), temp: m('Temperature', '°C', 1), hum: m('Humidity', '%', 1) } },
-  o2: { label: 'Oxygen', hw: 'O₂ sensor', every: 2, metrics: { o2_pct: m('O₂', '%', 2) } },
+  bme280: {
+    label: 'Climate', hw: 'BME280', every: 1,
+    metrics: { temp: m('Temperature', '°C', 1), hum: m('Humidity', '%', 1), pres: m('Pressure', 'hPa', 1), dew_point_c: m('Dew point', '°C', 1) },
+  },
+  scd40: {
+    label: 'CO₂', hw: 'SCD40', every: 5, about: 'Infrared (NDIR) CO₂ sensor: CO₂ only, 400–5000 ppm, plus its own temperature and humidity',
+    metrics: { co2_ppm: m('CO₂', 'ppm', 0), temp: m('Temperature', '°C', 1), hum: m('Humidity', '%', 1), dew_point_c: m('Dew point', '°C', 1) },
+  },
+  o2: { label: 'Oxygen', hw: 'O₂ sensor', every: 2, about: 'Electrochemical cell: oxygen only, 0–25 %', metrics: { o2_pct: m('O₂', '%', 2) } },
   mq4: {
     label: 'Methane', hw: 'MQ-4 · ESP32 board', every: 1, note: 'ppm appears after the 3 min warm-up and CAL_MQ4 in clean air',
-    metrics: { ch4_ppm: m('CH₄', 'ppm', 1), rs_r0: m('Rs/R0', '×', 2), vout_mv: m('Sensor output', 'mV', 0) },
+    about: 'Heated tin-oxide sensor, 200–10000 ppm: most sensitive to methane, but LPG, hydrogen, alcohol and smoke also raise it, and it cannot tell them apart',
+    metrics: {
+      ch4_ppm: m('CH₄', 'ppm', 1), rs_r0: m('Rs/R0', '×', 2), rs_rl: m('Rs/RL', '×', 2), vout_mv: m('Sensor output', 'mV', 0),
+      warming: m('Warming up', '', 0), calibrated: m('Calibrated', '', 0),
+    },
   },
   bno055: {
     label: 'Orientation', hw: 'BNO055 · ESP32 board', every: 1, note: 'rotate the board slowly until calibration reads 3',
     metrics: {
       heading_deg: m('Heading', '°', 1), roll_deg: m('Roll', '°', 1), pitch_deg: m('Pitch', '°', 1),
-      lin_acc_ms2: m('Motion', 'm/s²', 2), imu_calib: m('Calibration', '/3', 0),
+      lin_acc_ms2: m('Motion', 'm/s²', 2), gyro_dps: m('Rotation rate', '°/s', 1), grav_ms2: m('Gravity', 'm/s²', 2),
+      mag_ut: m('Magnetic field', 'µT', 1), temp: m('Chip temperature', '°C', 0),
+      imu_calib: m('Calibration: system', '/3', 0), calib_gyro: m('Calibration: gyro', '/3', 0),
+      calib_acc: m('Calibration: accel', '/3', 0), calib_mag: m('Calibration: magnetometer', '/3', 0),
     },
   },
   mq7: { label: 'Carbon monoxide', hw: 'MQ-7 + STM32', every: 150, note: 'one reading per 150 s heater cycle', metrics: { co_ppm: m('CO', 'ppm', 1) } },
