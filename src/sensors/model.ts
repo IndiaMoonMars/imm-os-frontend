@@ -61,7 +61,9 @@ const histLen = (sensor: string) => (sensor === 'ecg_ad8232' ? 300 : 60)   // EC
 
 export function applyFrame(streams: Map<string, Stream>, f: RealtimeFrame, receivedMs = Date.now()): void {
   const node = f.node_id || 'unknown', zone = f.zone || 'unknown'
-  const key = `${node}|${f.sensor}|${zone}|${f.crew_id ?? ''}`
+  // Real and simulated readings of one sensor are separate streams, so a node whose simulator
+  // is still on next to its real sensor shows two cards instead of one mixing both.
+  const key = `${node}|${f.sensor}|${zone}|${f.crew_id ?? ''}|${f.simulated ? 'sim' : 'live'}`
   let s = streams.get(key)
   if (!s) {
     s = { key, node, sensor: f.sensor, zone, crew: f.crew_id, simulated: !!f.simulated, ts: 0, metrics: {}, hist: {}, arrivals: [] }
@@ -70,7 +72,6 @@ export function applyFrame(streams: Map<string, Stream>, f: RealtimeFrame, recei
   const ts = f.timestamp * 1000
   if (ts < s.ts) return                                   // late duplicate
   s.ts = ts
-  s.simulated = !!f.simulated
   for (const [k, v] of Object.entries(f)) {
     if (META.has(k) || typeof v !== 'number') continue
     s.metrics[k] = v
