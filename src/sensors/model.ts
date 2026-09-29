@@ -2,7 +2,7 @@ import type { RealtimeFrame } from '../hooks/useRealtime'
 
 // ── What each sensor is and how often it reports (edge drivers) ──────
 
-export interface MetricDef { label: string; unit: string; dp: number }
+export interface MetricDef { label: string; unit: string; dp: number; flag?: boolean }   // flag: shown as YES / no
 export interface SensorDef {
   label: string; hw: string; every: number
   note?: string                 // shown while the stream is not fresh
@@ -11,6 +11,7 @@ export interface SensorDef {
 }
 
 export const m = (label: string, unit: string, dp: number): MetricDef => ({ label, unit, dp })
+export const flag = (label: string): MetricDef => ({ label, unit: '', dp: 0, flag: true })
 
 export const CATALOG: Record<string, SensorDef> = {
   bme280: {
@@ -27,7 +28,7 @@ export const CATALOG: Record<string, SensorDef> = {
     about: 'Heated tin-oxide sensor, 200–10000 ppm: most sensitive to methane, but LPG, hydrogen, alcohol and smoke also raise it, and it cannot tell them apart',
     metrics: {
       ch4_ppm: m('CH₄', 'ppm', 1), rs_r0: m('Rs/R0', '×', 2), rs_rl: m('Rs/RL', '×', 2), vout_mv: m('Sensor output', 'mV', 0),
-      warming: m('Warming up', '', 0), calibrated: m('Calibrated', '', 0),
+      warming: flag('Warming up'), calibrated: flag('Calibrated'),
     },
   },
   bno055: {
@@ -43,12 +44,12 @@ export const CATALOG: Record<string, SensorDef> = {
   geiger: {
     label: 'Radiation', hw: 'SEN0463 Geiger · external board', every: 1, note: 'dose rate settles after the first minute (60 s counting window)',
     about: 'M4011 Geiger–Müller tube: counts beta and gamma, dose rate as Cs-137-equivalent µSv/h (CPM ÷ 153.8); blind to alpha and neutrons. Background is about 0.1–0.3 µSv/h',
-    metrics: { usv_h: m('Dose rate', 'µSv/h', 3), cpm: m('Count rate', 'CPM', 0), counts: m('Counts', '', 0), warming: m('Warming up', '', 0) },
+    metrics: { usv_h: m('Dose rate', 'µSv/h', 3), cpm: m('Count rate', 'CPM', 0), counts: m('Counts', '', 0), warming: flag('Warming up') },
   },
   gnss: {
     label: 'Position', hw: 'TEL0157 GNSS · external board', every: 1, note: 'the antenna needs open sky; the first fix can take a few minutes',
     metrics: {
-      fix: m('Fix', '', 0), sats: m('Satellites', '', 0), lat: m('Latitude', '°', 6), lon: m('Longitude', '°', 6),
+      fix: flag('Fix'), sats: m('Satellites', '', 0), lat: m('Latitude', '°', 6), lon: m('Longitude', '°', 6),
       alt_m: m('Altitude', 'm', 1), sog_kn: m('Speed', 'kn', 2), cog_deg: m('Course', '°', 1),
     },
   },
@@ -61,7 +62,16 @@ export const CATALOG: Record<string, SensorDef> = {
     label: 'Node health', hw: 'Raspberry Pi', every: 10, metrics: {
       cpu_temp: m('SoC temp', '°C', 1), cpu_load: m('CPU', '%', 0), mem_pct: m('Memory', '%', 0), disk_pct: m('Disk', '%', 0),
       fan_rpm: m('Fan', 'rpm', 0), power_w: m('Board power', 'W', 2), supply_v: m('5 V input', 'V', 2),
-      undervolt: m('Under-voltage', '', 0), throttled: m('Throttled', '', 0),
+      undervolt: flag('Under-voltage'), throttled: flag('Throttled'), undervolt_boot: flag('Under-voltage since boot'),
+      mcc_link: flag('MCC link'), mqtt_backlog: m('Readings queued for the MCC', '', 0),
+      svc_failed: m('Failed services', '', 0), svc_restarts: m('Service restarts', '', 0),
+    },
+  },
+  board: {
+    label: 'ESP32 board', hw: 'board health', every: 10,
+    metrics: {
+      rssi_dbm: m('Wi-Fi signal', 'dBm', 0), uptime_s: m('Uptime', 's', 0), boot_count: m('Boots', '', 0),
+      reset_reason: m('Reset reason', '', 0), i2c_err: m('I²C errors', '', 0),
     },
   },
   bms: { label: 'Battery & solar', hw: 'UPS gauge / INA219', every: 10, metrics: { battery_pct: m('Battery', '%', 0), solar_w: m('Solar', 'W', 1) } },

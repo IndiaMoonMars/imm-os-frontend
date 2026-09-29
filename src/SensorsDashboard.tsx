@@ -124,13 +124,13 @@ function SensorCard({ s, now }: { s: Stream; now: number }) {
       )}
       <div className="sensor-metrics">
         {[...metricKeys, ...extra].map(k => {
-          const md = def?.metrics[k] ?? m(k, '', 2)
           const v = s.metrics[k]
+          const md = def?.metrics[k] ?? m(k.replace(/_/g, ' '), '', Number.isInteger(v) ? 0 : 2)
           const showSpark = (s.hist[k]?.length ?? 0) > 1 && md.unit !== ''
           return (
             <div key={k} className="sensor-metric">
               <span>{md.label}</span>
-              <strong>{md.unit === '' ? (v ? 'YES' : 'no') : v.toFixed(md.dp)} <small>{md.unit}</small></strong>
+              <strong>{md.flag ? (v ? 'YES' : 'no') : v.toFixed(md.dp)} <small>{md.unit}</small></strong>
               {showSpark && <Sparkline id={`${s.key}-${k}`} data={s.hist[k]} color={s.simulated ? '#ffb547' : '#3ef0a0'} height={s.sensor === 'ecg_ad8232' ? 56 : 28} />}
             </div>
           )
