@@ -23,7 +23,7 @@ export const expectedO2 = (co2: number) => 20.95 - 1.2 * Math.max(0, co2 - 420) 
 
 export function sensorChecks(streams: Stream[]): Check[] {
   const get = (sensor: string) => streams.find(s => s.sensor === sensor && !s.simulated)?.metrics
-  const bme = get('bme280'), scd = get('scd40'), o2 = get('o2'), bno = get('bno055'), mq4 = get('mq4')
+  const bme = get('bme280'), scd = get('scd40'), o2 = get('o2'), bno = get('bno055'), mq4 = get('mq4'), gm = get('geiger'), gps = get('gnss')
   const c: Check[] = []
   const f1 = (v: number) => v.toFixed(1)
 
@@ -76,6 +76,23 @@ export function sensorChecks(streams: Stream[]): Check[] {
     if (mq4.warming === 1) c.push({ sensor: 'MQ-4', name: 'Warm-up', level: 'idle', detail: 'heating (3 min after power-on): no ppm yet' })
     if (mq4.calibrated === 0) c.push({ sensor: 'MQ-4', name: 'Calibration', level: 'warn', detail: 'not calibrated: mV and Rs/RL only', hint: 'after 24–48 h powered, in clean air: CAL_MQ4' })
     if (mq4.rs_r0 !== undefined) c.push({ sensor: 'MQ-4', name: 'Clean air', level: band(mq4.rs_r0, [3, 6.5], [2, 8]), detail: `Rs/R0 ${mq4.rs_r0.toFixed(2)} (clean air ~4.4)`, hint: mq4.rs_r0 < 3 ? 'gas present now, or CAL_MQ4 done in air that wasn’t clean' : 'redo CAL_MQ4 in clean air with the heater warm' })
+  }
+
+  if (gm?.warming === 1) c.push({ sensor: 'Geiger', name: 'Warm-up', level: 'idle', detail: 'filling the 60 s counting window' })
+  else if (gm?.cpm !== undefined) {
+    c.push({
+      sensor: 'Geiger', name: 'Background', level: gm.cpm < 5 ? 'warn' : band(gm.usv_h ?? gm.cpm / 153.8, [0.03, 0.5], [0.03, 2.5]),
+      detail: `${gm.cpm.toFixed(0)} CPM · ${(gm.usv_h ?? gm.cpm / 153.8).toFixed(3)} µSv/h (background 0.1–0.3)`,
+      hint: gm.cpm < 5 ? 'almost no counts: tube or pulse line dead (the tube always sees background, ~15–45 CPM)'
+        : 'above background: check again away from the source; a lasting rise is real',
+    })
+  }
+  if (gps?.fix !== undefined) {
+    c.push({
+      sensor: 'GNSS', name: 'Fix', level: gps.fix === 1 ? band(gps.sats ?? 0, [6, 64], [4, 64]) : 'warn',
+      detail: gps.fix === 1 ? `${(gps.sats ?? 0).toFixed(0)} satellites · ${gps.lat?.toFixed(5)}, ${gps.lon?.toFixed(5)}` : `no fix (${(gps.sats ?? 0).toFixed(0)} satellites)`,
+      hint: 'the antenna needs open sky: not indoors, not under metal; a cold start takes a few minutes',
+    })
   }
   return c
 }

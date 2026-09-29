@@ -40,6 +40,18 @@ export const CATALOG: Record<string, SensorDef> = {
       calib_acc: m('Calibration: accel', '/3', 0), calib_mag: m('Calibration: magnetometer', '/3', 0),
     },
   },
+  geiger: {
+    label: 'Radiation', hw: 'SEN0463 Geiger · external board', every: 1, note: 'dose rate settles after the first minute (60 s counting window)',
+    about: 'M4011 Geiger–Müller tube: counts beta and gamma, dose rate as Cs-137-equivalent µSv/h (CPM ÷ 153.8); blind to alpha and neutrons. Background is about 0.1–0.3 µSv/h',
+    metrics: { usv_h: m('Dose rate', 'µSv/h', 3), cpm: m('Count rate', 'CPM', 0), counts: m('Counts', '', 0), warming: m('Warming up', '', 0) },
+  },
+  gnss: {
+    label: 'Position', hw: 'TEL0157 GNSS · external board', every: 1, note: 'the antenna needs open sky; the first fix can take a few minutes',
+    metrics: {
+      fix: m('Fix', '', 0), sats: m('Satellites', '', 0), lat: m('Latitude', '°', 6), lon: m('Longitude', '°', 6),
+      alt_m: m('Altitude', 'm', 1), sog_kn: m('Speed', 'kn', 2), cog_deg: m('Course', '°', 1),
+    },
+  },
   mq7: { label: 'Carbon monoxide', hw: 'MQ-7 + STM32', every: 150, note: 'one reading per 150 s heater cycle', metrics: { co_ppm: m('CO', 'ppm', 1) } },
   tsl2561: { label: 'Light', hw: 'TSL2561', every: 1, metrics: { lux: m('Illuminance', 'lux', 0) } },
   ina219: { label: 'Power bus', hw: 'INA219', every: 1, metrics: { voltage_v: m('Voltage', 'V', 2), current_ma: m('Current', 'mA', 0), power_mw: m('Power', 'mW', 0) } },
