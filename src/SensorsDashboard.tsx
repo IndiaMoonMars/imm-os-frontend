@@ -117,6 +117,11 @@ function SensorCard({ s, now }: { s: Stream; now: number }) {
         <SourceBadge simulated={s.simulated} />
       </div>
       {warnFlag && <Pill tone="crit">{s.metrics.undervolt === 1 ? 'UNDER-VOLTAGE' : 'THROTTLED'}</Pill>}
+      {(s.q === 'suspect' || s.q === 'bad') && (
+        <Pill tone={s.q === 'bad' ? 'crit' : 'warn'}>
+          {s.q === 'bad' ? 'BAD DATA' : 'SUSPECT'}{s.qf && s.qf.length ? `: ${s.qf.join(', ').replace(/_/g, ' ')}` : ''}
+        </Pill>
+      )}
       <div className="sensor-metrics">
         {[...metricKeys, ...extra].map(k => {
           const md = def?.metrics[k] ?? m(k, '', 2)

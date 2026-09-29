@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { LogOut, Menu, Satellite, X } from 'lucide-react'
 import ImmLogo from './ImmLogo'
+import Annunciator from './Annunciator'
 import { TABS, TAB_GROUPS, tabByKey, type TabKey } from '../theme/tabs'
 import { currentUser, logout } from '../auth'
 import { isSimulated, localMsd, useClock, usePoll, useTelemetry, type DelayConfig } from '../hooks/useMission'
@@ -101,6 +102,7 @@ export default function Shell({ active, onSelect, children }: {
             <div className="clock mars"><label>MARS · SOL {Math.floor(msd)}</label><span>{marsClock(msd)}</span></div>
             <div className="clock"><label>COMM DELAY</label><span>{delayLabel(delay.data)}</span></div>
           </div>
+          <Annunciator onOpenHealth={() => onSelect('health')} />
           <div className={`link-state ${link.replace(' ', '-').toLowerCase()}`}>
             <Satellite size={15} /><span>{link}</span>
           </div>

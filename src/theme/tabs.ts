@@ -1,11 +1,11 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   Activity, Bot, BookOpen, Boxes, Brain, CalendarRange, ClipboardCheck, Footprints,
-  Gauge, Leaf, Radio, RadioTower, ScrollText,
+  Gauge, Leaf, Radio, RadioTower, ScrollText, ShieldAlert,
 } from 'lucide-react'
 
 export type TabKey =
-  | 'overview' | 'sensors' | 'eclss' | 'eva' | 'comms' | 'journal' | 'briefing' | 'schedule'
+  | 'overview' | 'health' | 'sensors' | 'eclss' | 'eva' | 'comms' | 'journal' | 'briefing' | 'schedule'
   | 'procedures' | 'medical' | 'psych' | 'inventory' | 'ai'
 
 export type HeroArt =
@@ -30,6 +30,8 @@ export interface TabDef {
 export const TABS: TabDef[] = [
   { key: 'overview',   label: 'Overview',      title: 'Mission Overview',        tagline: 'Habitat vitals, power and node health at a glance',
     group: 'Mission', icon: Gauge, accent: '#ff7a3d', accent2: '#ffc26b', art: 'orbit', code: 'MSN-00' },
+  { key: 'health',     label: 'Health',        title: 'Systems Health & Alarms', tagline: 'Alarms, subsystem GO / NO-GO, EVA loss of signal, data integrity',
+    group: 'Mission', icon: ShieldAlert, accent: '#ff5d73', accent2: '#ffb547', art: 'radar', code: 'MSN-05' },
   { key: 'briefing',   label: 'Briefing',      title: 'Daily Mission Briefing',  tagline: 'Plan of the day, objectives and crew acknowledgements',
     group: 'Mission', icon: ScrollText, accent: '#60a5fa', accent2: '#a5d8ff', art: 'radar', code: 'MSN-01' },
   { key: 'schedule',   label: 'Schedule',      title: 'Scheduling & Roadmap',    tagline: 'Gantt, task board and milestone roadmap',

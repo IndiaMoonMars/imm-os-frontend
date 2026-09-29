@@ -57,13 +57,16 @@ export const CATALOG: Record<string, SensorDef> = {
   jetson: { label: 'Jetson', hw: 'Jetson', every: 5, metrics: { cpu_temp: m('CPU temp', '°C', 1), gpu_temp: m('GPU temp', '°C', 1), power_w: m('Power', 'W', 1) } },
 }
 
-const META = new Set(['sensor', 'timestamp', 'node_id', 'zone', 'crew_id', 'simulated', 'sig'])
+// not measurements: identity, integrity (seq/run) and quality flags
+const META = new Set(['sensor', 'timestamp', 'node_id', 'zone', 'crew_id', 'simulated', 'sig', 'seq', 'run', 'q', 'qf', 'delayed'])
 
 // ── Live state ──────────────────────────────────────────────────────
 
 export interface Stream {
   key: string; node: string; sensor: string; zone: string; crew?: string
   simulated: boolean; ts: number; metrics: Record<string, number>; hist: Record<string, number[]>; arrivals: number[]
+  /** data quality of the latest reading (the validator's q / qf): good, suspect or bad, and why */
+  q?: string; qf?: string[]
 }
 
 export type Freshness = 'fresh' | 'stale' | 'offline'
@@ -90,6 +93,7 @@ export function applyFrame(streams: Map<string, Stream>, f: RealtimeFrame, recei
   const ts = f.timestamp * 1000
   if (ts < s.ts) return                                   // late duplicate
   s.ts = ts
+  if (typeof f.q === 'string') { s.q = f.q; s.qf = Array.isArray(f.qf) ? (f.qf as string[]) : [] }
   for (const [k, v] of Object.entries(f)) {
     if (META.has(k) || typeof v !== 'number') continue
     s.metrics[k] = v
@@ -101,14 +105,25 @@ export function applyFrame(streams: Map<string, Stream>, f: RealtimeFrame, recei
   if (s.arrivals.length > 50) s.arrivals.splice(0, s.arrivals.length - 50)
 }
 
-export interface SnapshotEntry { node_id: string; sensor: string; zone: string; crew_id?: string | null; simulated: boolean; timestamp: string | null; metrics: Record<string, number> }
+export interface SnapshotEntry {
+  node_id: string; sensor: string; zone: string; crew_id?: string | null; simulated: boolean; timestamp: string | null
+  metrics: Record<string, number>; quality?: Record<string, string>
+}
+
+const Q_RANK: Record<string, number> = { good: 0, suspect: 1, bad: 2 }
+
+/** The worst quality of an entry's metrics (undefined when none was recorded). */
+export function worstQuality(q?: Record<string, string>): string | undefined {
+  const vals = Object.values(q ?? {})
+  return vals.length ? vals.reduce((a, b) => ((Q_RANK[b] ?? 0) > (Q_RANK[a] ?? 0) ? b : a)) : undefined
+}
 
 export function applySnapshot(streams: Map<string, Stream>, entries: SnapshotEntry[]) {
   for (const e of entries) {
     if (!e.timestamp) continue
     applyFrame(streams, {
       sensor: e.sensor, node_id: e.node_id, zone: e.zone, crew_id: e.crew_id ?? undefined,
-      simulated: e.simulated, timestamp: Date.parse(e.timestamp) / 1000, ...e.metrics,
+      simulated: e.simulated, timestamp: Date.parse(e.timestamp) / 1000, ...e.metrics, q: worstQuality(e.quality),
     }, 0)
   }
 }
