@@ -4,24 +4,14 @@ import ImmLogo from './ImmLogo'
 import Annunciator from './Annunciator'
 import { TABS, TAB_GROUPS, tabByKey, type TabKey } from '../theme/tabs'
 import { currentUser, logout } from '../auth'
-import { isSimulated, localMsd, useClock, usePoll, useTelemetry, type DelayConfig } from '../hooks/useMission'
+import { isSimulated, useClock, usePoll, useTelemetry, type DelayConfig } from '../hooks/useMission'
+import { clockAt, clockLabel, istDate, istTime, useMissionState } from '../mission/api'
 import { TelemetryCtx } from '../hooks/telemetryContext'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const hms = (d: Date, utc: boolean) => utc
   ? `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`
   : `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-
-function istTime(ms: number): string {
-  const d = new Date(ms + 330 * 60000)
-  return hms(d, true)
-}
-
-/** Coordinated Mars Time (HH:MM of the current sol). */
-function marsClock(msd: number): string {
-  const h = (msd - Math.floor(msd)) * 24
-  return `${pad(Math.floor(h))}:${pad(Math.floor((h % 1) * 60))}`
-}
 
 function delayLabel(d?: DelayConfig | null): string {
   if (!d || !d.value) return 'NO DELAY'
@@ -36,6 +26,7 @@ export default function Shell({ active, onSelect, children }: {
   const now = useClock()
   const telemetry = useTelemetry(5000)
   const delay = usePoll<DelayConfig>('/time/api/v1/time/delay', 30000)
+  const mission = useMissionState(60000)
   const [navOpen, setNavOpen] = useState(false)
 
   useEffect(() => { setNavOpen(false); window.scrollTo({ top: 0 }) }, [active])
@@ -43,7 +34,7 @@ export default function Shell({ active, onSelect, children }: {
   const all = telemetry.data ? Object.values(telemetry.data.readings).flatMap(n => Object.values(n)) : []
   const live = all.filter(r => !isSimulated(r)).length
   const link = telemetry.error ? 'LINK LOST' : !telemetry.data ? 'CONNECTING' : live === 0 ? 'SIMULATED' : live === all.length ? 'LIVE' : 'MIXED'
-  const msd = localMsd(now)
+  const mc = clockLabel(clockAt(mission.state, now))
   const user = currentUser()
 
   return (
@@ -97,9 +88,13 @@ export default function Shell({ active, onSelect, children }: {
             <strong>{tab.label}</strong>
           </div>
           <div className="clocks">
+            <div className="clock ist" title="India Standard Time (UTC+5:30)">
+              <label>IST · {istDate(now)}</label><span>{istTime(now)}</span>
+            </div>
+            <div className="clock mission" title="Sols are 24 h from the mission start (Mission page)">
+              <label>{mc.label}</label><span>{mc.value}</span>
+            </div>
             <div className="clock"><label>UTC</label><span>{hms(new Date(now), true)}</span></div>
-            <div className="clock"><label>IST</label><span>{istTime(now)}</span></div>
-            <div className="clock mars"><label>MARS · SOL {Math.floor(msd)}</label><span>{marsClock(msd)}</span></div>
             <div className="clock"><label>COMM DELAY</label><span>{delayLabel(delay.data)}</span></div>
           </div>
           <Annunciator onOpenHealth={() => onSelect('health')} />

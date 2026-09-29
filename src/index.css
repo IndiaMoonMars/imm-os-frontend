@@ -166,7 +166,10 @@ button { font-family: inherit; }
 .clock { padding: 4px 12px; border-left: 1px solid var(--line); min-width: 92px; }
 .clock label { display: block; font-size: 9.5px; letter-spacing: 0.2em; color: var(--text-4); text-transform: uppercase; white-space: nowrap; }
 .clock span { font-family: var(--font-mono); font-size: 14px; color: var(--text-1); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.clock.mars span { color: var(--brand-mars); text-shadow: 0 0 10px rgba(255, 122, 61, 0.45); }
+.clock.ist { background: linear-gradient(180deg, rgba(62, 240, 160, 0.12), rgba(62, 240, 160, 0.02)); border-left-color: rgba(62, 240, 160, 0.35); border-radius: 8px; }
+.clock.ist label { color: var(--text-2); }
+.clock.ist span { font-size: 19px; color: var(--ok); text-shadow: 0 0 12px rgba(62, 240, 160, 0.35); }
+.clock.mission span { color: var(--accent2, #ffc26b); }
 .link-state {
   display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; font-size: 11px; font-weight: 700;
   letter-spacing: 0.16em; border: 1px solid var(--line-hi); color: var(--text-2); white-space: nowrap;
@@ -407,13 +410,19 @@ input[type='range']::-moz-range-thumb { width: 14px; height: 14px; border-radius
 .module-surface .recharts-default-tooltip { background: rgba(8, 13, 26, 0.95) !important; border: 1px solid var(--line-hi) !important; border-radius: 10px; }
 
 /* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 1440px) {
+  .clock:nth-child(4) { display: none; }
+}
 @media (max-width: 1280px) {
-  .clock:nth-child(2) { display: none; }
+  .clock:nth-child(3) { display: none; }
 }
 @media (max-width: 1100px) {
   .grid-2 { grid-template-columns: 1fr; }
-  .clocks { display: none; }
+  .clock:nth-child(2) { display: none; }
   .topbar .link-state { margin-left: auto; }
+}
+@media (max-width: 600px) {
+  .clocks { display: none; }
 }
 @media (max-width: 860px) {
   .shell { grid-template-columns: 1fr; grid-template-areas: 'top' 'main'; }
@@ -487,4 +496,100 @@ input[type='range']::-moz-range-thumb { width: 14px; height: 14px; border-radius
   .sensor-check { grid-template-columns: 16px 1fr; }
   .sensor-check .who { display: none; }
   .sensor-check .val, .sensor-check .why { grid-column: 2; }
+}
+
+/* ── Mission page (MissionDashboard.tsx) ─────────────────────────── */
+.mission-page .muted { color: var(--text-3); font-size: 12px; }
+.mission-page .muted.small, .mission-page .small { font-size: 11.5px; margin-top: 8px; }
+.mission-page code { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); background: rgba(148, 163, 209, 0.08); padding: 1px 5px; border-radius: 5px; }
+.mission-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: center; }
+.mission-hero h2 { font-family: var(--font-display); font-size: 24px; letter-spacing: 0.12em; }
+.mission-hero p { color: var(--text-3); margin-top: 4px; }
+.mission-hero p b { color: var(--text-1); }
+.mission-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.mbtn { display: inline-flex; align-items: center; gap: 6px; font: 600 12px var(--font-sans); padding: 8px 12px; border-radius: 9px;
+  border: 1px solid var(--line-hi); color: var(--text-2); background: rgba(255, 255, 255, 0.03); cursor: pointer; }
+.mbtn:hover:not(:disabled) { color: var(--text-1); border-color: var(--accent); }
+.mbtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.mbtn.pri { background: var(--accent); color: #1a0a00; border-color: var(--accent); }
+.mbtn.danger { color: var(--crit); border-color: rgba(255, 93, 115, 0.5); }
+.mission-clockline { display: flex; align-items: baseline; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.mission-clockline .mc-label { font-size: 10px; letter-spacing: 0.22em; color: var(--text-4); }
+.mission-clockline b { font-family: var(--font-mono); font-size: 20px; color: var(--accent2); }
+.mission-clockline .mc-left { color: var(--text-3); font-size: 12px; }
+.mission-countdown { margin-top: 14px; }
+.mission-countdown small { display: block; font-size: 10px; letter-spacing: 0.22em; color: var(--text-4); }
+.mission-countdown b { font-family: var(--font-mono); font-size: 34px; color: var(--accent2); }
+.mission-bar { height: 10px; border-radius: 6px; background: rgba(148, 163, 209, 0.1); margin: 12px 0; overflow: hidden; }
+.mission-bar div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 6px; }
+.sol-cards { display: grid; gap: 10px; }
+.sol-card { text-align: left; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: rgba(255, 255, 255, 0.02);
+  color: var(--text-1); font: inherit; cursor: pointer; min-width: 0; }
+.sol-card b { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.16em; }
+.sol-card .st { float: right; font-size: 11px; }
+.sol-card small { display: block; font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); margin-top: 4px; }
+.sol-card.done .st { color: var(--ok); }
+.sol-card.live { border-color: rgba(255, 194, 107, 0.6); background: rgba(255, 194, 107, 0.07); }
+.sol-card.live .st { color: var(--accent2); }
+.sol-card.upcoming { opacity: 0.45; cursor: default; }
+.sol-card.sel { box-shadow: 0 0 0 2px var(--accent); }
+.mtiles { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+.mtile { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: rgba(255, 255, 255, 0.02); min-width: 0; }
+.mtile small { font-size: 10px; letter-spacing: 0.16em; color: var(--text-3); }
+.mtile b { display: block; font-family: var(--font-mono); font-size: 24px; margin: 6px 0 2px; }
+.mtile b u { text-decoration: none; font-size: 12px; color: var(--text-3); margin-left: 4px; }
+.mtile p { font-size: 11px; color: var(--text-3); line-height: 1.5; }
+.mspark { display: block; margin: 6px 0; height: 34px; }
+.warmbar { height: 5px; border-radius: 3px; background: rgba(148, 163, 209, 0.12); margin: 14px 0; grid-column: 1 / -1; }
+.warmbar div { height: 5px; border-radius: 3px; background: var(--warn); }
+.mission-grid { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 20px; align-items: start; }
+.mission-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.mseg { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.mseg button { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); color: var(--text-3); background: none; font: 12px var(--font-sans); cursor: pointer; }
+.mseg button.on { border-color: var(--accent); color: var(--text-1); background: rgba(255, 181, 71, 0.1); }
+.mchart { display: block; }
+.mlegend { display: flex; gap: 16px; font-size: 12px; color: var(--text-2); margin-bottom: 6px; flex-wrap: wrap; }
+.mlegend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.mhealth { border-collapse: separate; border-spacing: 4px; width: 100%; }
+.mhealth th { font-size: 10px; letter-spacing: 0.16em; color: var(--text-3); font-weight: 600; text-align: center; }
+.mhealth th.l, .mhealth td.l { text-align: left; color: var(--text-2); font-size: 12px; letter-spacing: 0; }
+.mhealth td.l small { display: block; color: var(--text-4); font-size: 10.5px; }
+.mhealth td.c { text-align: center; font-family: var(--font-mono); font-size: 12px; border-radius: 6px; padding: 6px 0; color: var(--text-1); }
+.mhealth td.c.none { background: rgba(148, 163, 209, 0.05); color: var(--text-4); }
+.mhealth td.c.low { outline: 1px solid var(--warn); }
+.mready > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.mready b { font-size: 13px; }
+.mready p { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.mready small { font-size: 10px; color: var(--text-4); }
+.mpill { font-size: 10.5px; letter-spacing: 0.08em; padding: 3px 8px; border-radius: 6px; font-weight: 700; align-self: center; white-space: nowrap; }
+.mpill.ok { color: var(--ok); border: 1px solid rgba(62, 240, 160, 0.45); }
+.mpill.warn { color: var(--warn); border: 1px solid rgba(255, 181, 71, 0.5); }
+.mpill.crit { color: var(--crit); border: 1px solid rgba(255, 93, 115, 0.5); }
+.mnote { display: flex; gap: 8px; margin-bottom: 8px; }
+.mnote input { flex: 1; min-width: 0; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line); border-radius: 9px; padding: 7px 10px; color: var(--text-1); font: 12px var(--font-sans); }
+.mevents > div { display: grid; grid-template-columns: 70px 1fr; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+.mevents span { font-family: var(--font-mono); color: var(--text-3); font-size: 11.5px; }
+.mevents b { font-weight: 600; }
+.mevents b.w { color: var(--warn); } .mevents b.c { color: var(--crit); } .mevents b.o { color: var(--ok); }
+.dose-big { font-family: var(--font-mono); font-size: 34px; }
+.dose-big u { text-decoration: none; font-size: 14px; color: var(--text-3); }
+.archive-note { padding: 0 6px; }
+.mform { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 12px; align-items: end; margin-top: 14px; }
+.mform label { display: flex; flex-direction: column; gap: 5px; font-size: 11px; letter-spacing: 0.1em; color: var(--text-3); text-transform: uppercase; }
+.mform input { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line-hi); border-radius: 9px; padding: 8px 10px; color: var(--text-1);
+  font: 13px var(--font-sans); color-scheme: dark; }
+.mform p { grid-column: 1 / -1; }
+.merr { color: var(--crit); }
+.mcheck { padding-left: 20px; display: flex; flex-direction: column; gap: 8px; color: var(--text-2); font-size: 13px; }
+.mcheck b { color: var(--accent2); margin-right: 8px; font-family: var(--font-mono); }
+@media (max-width: 1280px) {
+  .mission-grid { grid-template-columns: 1fr; }
+  .mtiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .mission-hero { grid-template-columns: 1fr; }
+  .mission-actions { justify-content: flex-start; }
+  .sol-cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .mtiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mform { grid-template-columns: 1fr 1fr; }
 }

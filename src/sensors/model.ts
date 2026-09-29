@@ -20,7 +20,7 @@ export const CATALOG: Record<string, SensorDef> = {
   },
   scd40: {
     label: 'CO₂', hw: 'SCD40', every: 5, about: 'Infrared (NDIR) CO₂ sensor: CO₂ only, 400–5000 ppm, plus its own temperature and humidity',
-    metrics: { co2_ppm: m('CO₂', 'ppm', 0), temp: m('Temperature', '°C', 1), hum: m('Humidity', '%', 1), dew_point_c: m('Dew point', '°C', 1) },
+    metrics: { co2_ppm: m('CO₂', 'ppm', 0), temp: m('Temperature', '°C', 1), hum: m('Humidity', '%', 1), dew_point_c: m('Dew point', '°C', 1), asc: flag('Self-calibration on') },
   },
   o2: { label: 'Oxygen', hw: 'O₂ sensor', every: 2, about: 'Electrochemical cell: oxygen only, 0–25 %', metrics: { o2_pct: m('O₂', '%', 2) } },
   mq4: {
@@ -28,7 +28,7 @@ export const CATALOG: Record<string, SensorDef> = {
     about: 'Heated tin-oxide sensor, 200–10000 ppm: most sensitive to methane, but LPG, hydrogen, alcohol and smoke also raise it, and it cannot tell them apart',
     metrics: {
       ch4_ppm: m('CH₄', 'ppm', 1), rs_r0: m('Rs/R0', '×', 2), rs_rl: m('Rs/RL', '×', 2), vout_mv: m('Sensor output', 'mV', 0),
-      warming: flag('Warming up'), calibrated: flag('Calibrated'),
+      warming: flag('Warming up'), warm_left_s: m('Warm-up left', 's', 0), calibrated: flag('Calibrated'),
     },
   },
   bno055: {
@@ -39,12 +39,13 @@ export const CATALOG: Record<string, SensorDef> = {
       mag_ut: m('Magnetic field', 'µT', 1), temp: m('Chip temperature', '°C', 0),
       imu_calib: m('Calibration: system', '/3', 0), calib_gyro: m('Calibration: gyro', '/3', 0),
       calib_acc: m('Calibration: accel', '/3', 0), calib_mag: m('Calibration: magnetometer', '/3', 0),
+      cal_restored: flag('Calibration restored from flash'),
     },
   },
   geiger: {
     label: 'Radiation', hw: 'SEN0463 Geiger · external board', every: 1, note: 'dose rate settles after the first minute (60 s counting window)',
     about: 'M4011 Geiger–Müller tube: counts beta and gamma, dose rate as Cs-137-equivalent µSv/h (CPM ÷ 153.8); blind to alpha and neutrons. Background is about 0.1–0.3 µSv/h',
-    metrics: { usv_h: m('Dose rate', 'µSv/h', 3), cpm: m('Count rate', 'CPM', 0), counts: m('Counts', '', 0), warming: flag('Warming up') },
+    metrics: { usv_h: m('Dose rate', 'µSv/h', 3), cpm: m('Count rate', 'CPM', 0), counts: m('Counts', '', 0), warming: flag('Warming up'), window_s: m('Counting window', 's', 0) },
   },
   gnss: {
     label: 'Position', hw: 'TEL0157 GNSS · external board', every: 1, note: 'the antenna needs open sky; the first fix can take a few minutes',

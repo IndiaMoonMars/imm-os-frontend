@@ -1,11 +1,11 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   Activity, Bot, BookOpen, Boxes, Brain, CalendarRange, ClipboardCheck, Footprints,
-  Gauge, Leaf, Radio, RadioTower, ScrollText, ShieldAlert,
+  Gauge, Leaf, Radio, RadioTower, Rocket, ScrollText, ShieldAlert,
 } from 'lucide-react'
 
 export type TabKey =
-  | 'overview' | 'health' | 'sensors' | 'eclss' | 'eva' | 'comms' | 'journal' | 'briefing' | 'schedule'
+  | 'mission' | 'overview' | 'health' | 'sensors' | 'eclss' | 'eva' | 'comms' | 'journal' | 'briefing' | 'schedule'
   | 'procedures' | 'medical' | 'psych' | 'inventory' | 'ai'
 
 export type HeroArt =
@@ -28,6 +28,8 @@ export interface TabDef {
 }
 
 export const TABS: TabDef[] = [
+  { key: 'mission',    label: 'Mission',       title: 'Mission Record',          tagline: 'The 7-sol record: IST, sols, every reading stored and archived per sol',
+    group: 'Mission', icon: Rocket, accent: '#ffb547', accent2: '#ffc26b', art: 'timeline', code: 'MSN-06' },
   { key: 'overview',   label: 'Overview',      title: 'Mission Overview',        tagline: 'Habitat vitals, power and node health at a glance',
     group: 'Mission', icon: Gauge, accent: '#ff7a3d', accent2: '#ffc26b', art: 'orbit', code: 'MSN-00' },
   { key: 'health',     label: 'Health',        title: 'Systems Health & Alarms', tagline: 'Alarms, subsystem GO / NO-GO, EVA loss of signal, data integrity',

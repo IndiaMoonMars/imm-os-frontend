@@ -98,6 +98,12 @@ export default function SensorsDashboard() {
   )
 }
 
+/** "2:14": warm-up seconds left, counted down since the reading arrived */
+function warmLeft(leftAtReading: number, ageS: number): string {
+  const left = Math.max(0, leftAtReading - ageS)
+  return `${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')}`
+}
+
 function SensorCard({ s, now }: { s: Stream; now: number }) {
   const def = CATALOG[s.sensor]
   const age = Math.max(0, (now - s.ts) / 1000)
@@ -117,6 +123,12 @@ function SensorCard({ s, now }: { s: Stream; now: number }) {
         <SourceBadge simulated={s.simulated} />
       </div>
       {warnFlag && <Pill tone="crit">{s.metrics.undervolt === 1 ? 'UNDER-VOLTAGE' : 'THROTTLED'}</Pill>}
+      {s.sensor === 'mq4' && s.metrics.warming === 1 && (
+        <Pill tone="warn">WARMING · {warmLeft(s.metrics.warm_left_s ?? 180, (now - s.ts) / 1000)} LEFT</Pill>
+      )}
+      {s.sensor === 'geiger' && s.metrics.warming === 1 && (
+        <Pill tone="warn">FILLING 60 s WINDOW · {Math.max(0, Math.ceil(60 - (s.metrics.window_s ?? 0) - (now - s.ts) / 1000))} s</Pill>
+      )}
       {(s.q === 'suspect' || s.q === 'bad') && (
         <Pill tone={s.q === 'bad' ? 'crit' : 'warn'}>
           {s.q === 'bad' ? 'BAD DATA' : 'SUSPECT'}{s.qf && s.qf.length ? `: ${s.qf.join(', ').replace(/_/g, ' ')}` : ''}
