@@ -593,3 +593,57 @@ input[type='range']::-moz-range-thumb { width: 14px; height: 14px; border-radius
   .mtiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .mform { grid-template-columns: 1fr 1fr; }
 }
+
+/* ── Mission control: restart / test / abort, history, read-only view ── */
+.mbtn.warn { color: var(--warn); border-color: rgba(255, 181, 71, 0.5); background: rgba(255, 181, 71, 0.07); }
+.mpill.idle { color: var(--text-3); border: 1px solid var(--line-hi); }
+.mpill.info { color: #7cc0ff; border: 1px solid rgba(124, 192, 255, 0.45); }
+.mtag { margin-left: 12px; vertical-align: middle; font-family: var(--font-sans); letter-spacing: 0.08em; }
+.mission-toolbar { display: flex; justify-content: flex-end; }
+.mctl { position: relative; }
+.mctl-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 40; width: min(380px, calc(100vw - 32px));
+  background: var(--bg-2); border: 1px solid var(--line-hi); border-radius: 12px; padding: 6px; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5); }
+.mctl-menu > button { display: flex; gap: 12px; width: 100%; text-align: left; padding: 10px; border: 0; border-radius: 9px;
+  background: transparent; color: var(--text-1); cursor: pointer; font: inherit; }
+.mctl-menu > button:hover { background: rgba(255, 255, 255, 0.05); }
+.mctl-menu i { flex: none; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--text-2);
+  background: rgba(255, 255, 255, 0.05); }
+.mctl-menu i.w { color: var(--warn); background: rgba(255, 181, 71, 0.1); }
+.mctl-menu i.c { color: var(--crit); background: rgba(255, 93, 115, 0.1); }
+.mctl-menu b { display: block; font-size: 13px; }
+.mctl-menu small { color: var(--text-3); font-size: 12px; line-height: 1.4; }
+.mctl-menu .merr { padding: 6px 10px; font-size: 12px; }
+.mmodal-bg { position: fixed; inset: 0; z-index: 60; background: rgba(2, 4, 10, 0.72); display: grid; place-items: center; padding: 16px; }
+.mmodal { width: min(560px, 100%); background: var(--bg-2); border: 1px solid rgba(255, 93, 115, 0.4); border-radius: 14px; padding: 20px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6); }
+.mmodal h3 { color: var(--crit); font-size: 17px; margin-bottom: 8px; }
+.mmodal .muted { font-size: 13px; margin-bottom: 8px; }
+.mopt { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 8px 0;
+  cursor: pointer; font-size: 13px; color: var(--text-2); }
+.mopt.sel { border-color: rgba(255, 181, 71, 0.6); background: rgba(255, 181, 71, 0.06); }
+.mopt b { display: block; color: var(--text-1); }
+.mopt small { color: var(--text-3); }
+.mopt input { margin-top: 3px; accent-color: var(--warn); }
+.mopt.inline { display: inline-flex; border: 0; padding: 0; margin: 0 14px 0 0; align-items: center; }
+.mrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 4px; font-size: 13px; }
+.minput { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line-hi); border-radius: 9px; padding: 8px 10px; color: var(--text-1);
+  font: 13px var(--font-mono); color-scheme: dark; }
+.mconfirm { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; font-size: 12px; color: var(--text-3); }
+.mmodal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.mview-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; border-radius: 12px;
+  border: 1px solid rgba(124, 192, 255, 0.4); background: rgba(124, 192, 255, 0.07); color: var(--text-2); font-size: 13px; }
+.mview-banner b { color: #7cc0ff; }
+.mview-banner .mbtn { margin-left: auto; }
+.mhist-tools { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-3); }
+.mhist-tools input { accent-color: var(--accent); vertical-align: -2px; }
+.mhist { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mhist th { font-size: 10px; letter-spacing: 0.16em; color: var(--text-3); font-weight: 600; text-align: left; padding: 6px 8px; }
+.mhist td { padding: 9px 8px; border-top: 1px solid var(--line); color: var(--text-2); }
+.mhist td b { color: var(--text-1); }
+.mhist td small { color: var(--text-4); }
+.mhist tr.on td { background: rgba(255, 255, 255, 0.03); }
+@media (max-width: 760px) {
+  .mhist th:nth-child(3), .mhist td:nth-child(3), .mhist th:nth-child(6), .mhist td:nth-child(6) { display: none; }
+  .mview-banner .mbtn { margin-left: 0; }
+}
+.mission-banner { position: relative; z-index: 20; }      /* its Mission control menu opens over the panels below */

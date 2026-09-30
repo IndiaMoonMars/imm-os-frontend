@@ -1,15 +1,16 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from 'react'
-import { Activity, CalendarClock, Download, FileText, Flag, ListChecks, Radiation, Rocket, ScrollText, Send } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
+import { Activity, ArrowLeft, CalendarClock, Download, FileText, Flag, History, ListChecks, Radiation, Rocket, ScrollText, Send } from 'lucide-react'
 import { Panel } from './components/Hud'
 import { hasRole } from './auth'
 import { useClock } from './hooks/useMission'
 import type { SnapshotEntry } from './sensors/model'
 import { CATALOG } from './sensors/model'
 import {
-  MEASUREMENTS, clockAt, clockLabel, dhms, getJson, istDate, istInput, istShort, istTime, openDownload, postJson,
+  MEASUREMENTS, clockAt, clockLabel, dhms, getJson, istDate, istInput, istShort, istTime, missionClock, openDownload, postJson,
   useMissionState, type HealthGrid, type MissionClock, type MissionEvent, type MissionState, type Overlay,
   type Overview, type SolDetail, type Timeline,
 } from './mission/api'
+import { HistoryPanel, MissionControlMenu } from './mission/controls'
 import { DoseChart, OverlayChart, Spark, TimelineChart } from './mission/charts'
 import { LIMITS, SOL_COLORS } from './mission/constants'
 import { readiness, type ReadyItem } from './mission/readiness'
@@ -38,40 +39,73 @@ function usePolled<T>(url: string | null, everyMs: number, deps: unknown[] = [])
   return { data, error, reload: () => setN(x => x + 1) }
 }
 
+// ?mission=<id> in the address opens an earlier mission from History (read-only)
+const viewFromUrl = () => { const v = Number(new URLSearchParams(window.location.search).get('mission')); return v > 0 ? v : null }
+
 export default function MissionDashboard() {
   const { state, error, reload } = useMissionState(30000)
   const now = useClock()
   const clock = clockAt(state, now)
   const sensors = usePolled<{ sensors: SnapshotEntry[] }>('/api/telemetry/sensors?minutes=10', 10000)
   const ready = useMemo(() => readiness(sensors.data?.sensors ?? [], now), [sensors.data, now])
+  const [viewId, setViewId] = useState<number | null>(viewFromUrl)
+  const [showHistory, setShowHistory] = useState(false)
+  const past = usePolled<Overview>(viewId ? `/api/mission/overview?mission=${viewId}` : null, 120000)
+  const open = (id: number | null) => {
+    setViewId(id)
+    setShowHistory(false)
+    const url = new URL(window.location.href)
+    if (id) url.searchParams.set('mission', String(id)); else url.searchParams.delete('mission')
+    window.history.replaceState(null, '', url)
+  }
+  const history = showHistory && <HistoryPanel viewing={viewId} onOpen={open} onClose={() => setShowHistory(false)} />
+  const onHistory = () => setShowHistory(x => !x)
 
   if (!state) {
     return <div className="tab-body mission-page"><Panel title="Mission" icon={<Rocket size={16} />}>
       <div className="empty">{error ? 'The mission service is not answering (backend or database down).' : 'Loading…'}</div>
     </Panel></div>
   }
-  if (!state.mission || clock.phase === 'none') {
-    return <div className="tab-body mission-page"><StartMission onDone={reload} /><Readiness items={ready} /><Checklist /></div>
+  if (viewId) {
+    if (!past.data) {
+      return <div className="tab-body mission-page">{history}<Panel title={`Mission #${viewId}`} icon={<History size={16} />}>
+        <div className="empty">{past.error ?? 'Loading…'} <button className="mbtn" onClick={() => open(null)}><ArrowLeft size={13} /> Current mission</button></div>
+      </Panel></div>
+    }
+    const pastState: MissionState = { now: now / 1000, mission: past.data.mission, clock: past.data.clock, sols: past.data.sols }
+    return <MissionView key={`m${viewId}`} state={pastState} clock={missionClock(past.data.mission, now)} now={now} ready={ready} reload={reload}
+      viewId={viewId} onBack={() => open(null)} onHistory={onHistory} history={history} />
   }
-  return <MissionView state={state} clock={clock} now={now} ready={ready} reload={reload} />
+  if (!state.mission || clock.phase === 'none') {
+    return <div className="tab-body mission-page">
+      <div className="mission-toolbar"><button className="mbtn" onClick={onHistory}><History size={14} /> History</button></div>
+      {history}<StartMission onDone={reload} /><Readiness items={ready} /><Checklist />
+    </div>
+  }
+  return <MissionView key={`m${state.mission.id}`} state={state} clock={clock} now={now} ready={ready} reload={reload}
+    onHistory={onHistory} history={history} />
 }
 
-// ── a mission exists ────────────────────────────────────────────────
-function MissionView({ state, clock, now, ready, reload }: {
+// ── a mission exists (the current one, or an earlier one opened from History: viewId) ──
+function MissionView({ state, clock, now, ready, reload, viewId, onBack, onHistory, history }: {
   state: MissionState; clock: MissionClock; now: number; ready: ReadyItem[]; reload: () => void
+  viewId?: number; onBack?: () => void; onHistory: () => void; history: ReactNode
 }) {
   const m = state.mission!
   const [sel, setSel] = useState<number | null>(null)
-  const current = clock.phase === 'active' ? clock.sol! : clock.phase === 'complete' ? clock.sol! : 1
+  const current = clock.phase === 'active' ? clock.sol! : clock.phase === 'complete' ? Math.max(1, clock.sol!) : 1
   const solN = sel ?? current
-  const started = clock.phase !== 'pre'
-  const overview = usePolled<Overview>(started ? '/api/mission/overview' : null, 60000)
-  const detail = usePolled<SolDetail>(started ? `/api/mission/sol/${solN}` : null, 60000, [solN])
+  const started = clock.phase !== 'pre' && !(clock.phase === 'complete' && !clock.sol)
+  const q = viewId ? `mission=${viewId}` : ''
+  const u = (path: string) => (q ? `${path}${path.includes('?') ? '&' : '?'}${q}` : path)
+  const overview = usePolled<Overview>(started ? u('/api/mission/overview') : null, 60000)
+  const detail = usePolled<SolDetail>(started ? u(`/api/mission/sol/${solN}`) : null, 60000, [solN])
   const [tlKey, setTlKey] = useState('co2')
   const [ovKey, setOvKey] = useState('temperature')
-  const timeline = usePolled<Timeline>(started ? `/api/mission/timeline?measurement=${tlKey}` : null, 60000)
-  const overlay = usePolled<Overlay>(started ? `/api/mission/overlay?measurement=${ovKey}` : null, 120000)
-  const health = usePolled<HealthGrid>(started ? '/api/mission/health' : null, 120000)
+  const timeline = usePolled<Timeline>(started ? u(`/api/mission/timeline?measurement=${tlKey}`) : null, 60000)
+  const overlay = usePolled<Overlay>(started ? u(`/api/mission/overlay?measurement=${ovKey}`) : null, 120000)
+  const health = usePolled<HealthGrid>(started ? u('/api/mission/health') : null, 120000)
+  const live = !viewId
   const [editing, setEditing] = useState(false)
   const [newMission, setNewMission] = useState(false)
   const cards = overview.data?.sols ?? state.sols
@@ -82,19 +116,28 @@ function MissionView({ state, clock, now, ready, reload }: {
 
   return (
     <div className="tab-body mission-page">
+      {viewId && (
+        <div className="mview-banner">
+          <History size={15} /><span>Viewing mission #{m.id} · <b>{(m.label || (clock.phase === 'complete' ? 'complete' : 'current')).toUpperCase()}</b> · read-only</span>
+          <button className="mbtn" onClick={onBack}><ArrowLeft size={13} /> Back to the current mission</button>
+        </div>
+      )}
+      {history}
       <Panel className="mission-banner">
         <div className="mission-hero">
           <div>
-            <h2>{m.name.toUpperCase()}</h2>
+            <h2>{m.name.toUpperCase()}{m.label === 'test' ? <span className="mpill idle mtag">TEST RUN</span> : null}</h2>
             <p>Sol 1 {now / 1000 < m.start ? 'starts' : 'started'} <b>{m.start_ist}</b> · ends Sol {m.sols} at {istDate(m.end * 1000, false)} {istTime(m.end * 1000, false)} IST
               {m.crew ? ` · crew ${m.crew}` : ''}{nodes ? ` · ${nodes} node${nodes > 1 ? 's' : ''}` : ''}{m.ended_at ? ` · ended ${istShort(m.ended_at * 1000)} IST` : ''}</p>
           </div>
           <div className="mission-actions">
-            {started && <button className="mbtn" onClick={() => openDownload(`/api/mission/download/sol/${solN}`)}><Download size={14} /> Sol {solN} data (ZIP)</button>}
-            {started && <button className="mbtn" onClick={() => openDownload(`/api/mission/report/${solN}`)}><FileText size={14} /> Sol {solN} report (PDF)</button>}
-            {started && <button className="mbtn pri" onClick={() => openDownload('/api/mission/download/mission')}><Download size={14} /> Whole mission</button>}
-            {canPlan() && clock.phase !== 'complete' && <button className="mbtn" onClick={() => setEditing(x => !x)}>Edit</button>}
-            {canPlan() && clock.phase === 'complete' && <button className="mbtn" onClick={() => setNewMission(x => !x)}>New mission</button>}
+            {started && <button className="mbtn" onClick={() => openDownload(u(`/api/mission/download/sol/${solN}`))}><Download size={14} /> Sol {solN} data (ZIP)</button>}
+            {started && <button className="mbtn" onClick={() => openDownload(u(`/api/mission/report/${solN}`))}><FileText size={14} /> Sol {solN} report (PDF)</button>}
+            {started && <button className="mbtn pri" onClick={() => openDownload(u('/api/mission/download/mission'))}><Download size={14} /> Whole mission</button>}
+            {live && canPlan() && clock.phase !== 'complete' && <button className="mbtn" onClick={() => setEditing(x => !x)}>Edit</button>}
+            {live && canPlan() && clock.phase === 'complete' && <button className="mbtn" onClick={() => setNewMission(x => !x)}>New mission</button>}
+            {live && canPlan() && <MissionControlMenu m={m} clock={clock} now={now} onChanged={reload} />}
+            <button className="mbtn" onClick={onHistory}><History size={14} /> History</button>
           </div>
         </div>
         {clock.phase === 'pre' && <div className="mission-countdown"><small>SOL 1 STARTS IN</small><b>{dhms(clock.t_minus_s ?? 0)}</b></div>}
@@ -148,7 +191,7 @@ function MissionView({ state, clock, now, ready, reload }: {
             <Panel title="7-SOL TIMELINE" icon={<CalendarClock size={16} />} right={<span className="muted">10-min mean · band = min–max · IST on the axis</span>}>
               <Seg value={tlKey} onChange={setTlKey} />
               {timeline.data && <TimelineChart points={timeline.data.points} sols={m.sols} nowH={timeline.data.now_h} start={m.start}
-                unit={timeline.data.unit} dp={timeline.data.dp} limits={LIMITS[tlKey]} label={timeline.data.label} />}
+                unit={timeline.data.unit} dp={timeline.data.dp} limits={LIMITS[tlKey]} label={timeline.data.label} ended={timeline.data.ended} />}
               {timeline.error && <div className="empty">{timeline.error}</div>}
             </Panel>
           )}
@@ -166,8 +209,8 @@ function MissionView({ state, clock, now, ready, reload }: {
           {started && <HealthTable grid={health.data} current={clock.phase === 'active' ? current : undefined} />}
         </div>
         <div className="mission-col side">
-          <Readiness items={ready} />
-          {started && <Events sol={solN} events={detail.data?.events ?? []} onAdded={detail.reload} />}
+          {live && <Readiness items={ready} />}
+          {started && <Events sol={solN} events={detail.data?.events ?? []} onAdded={detail.reload} readOnly={!live} />}
           {started && overview.data && (
             <Panel title="MISSION DOSE" icon={<Radiation size={16} />} right={<span className="muted">external Geiger · cumulative</span>}>
               <div className="dose-big">{overview.data.dose.total_usv.toFixed(1)} <u>µSv</u></div>
@@ -179,7 +222,7 @@ function MissionView({ state, clock, now, ready, reload }: {
           {started && overview.data && <p className="muted archive-note">Each finished sol is archived 10 min after it ends to <code>{overview.data.archive_dir}</code> (MISSION_ARCHIVE_DIR on the MCC PC) with SHA-256 checksums.</p>}
         </div>
       </div>
-      {!started && <Checklist />}
+      {!started && live && <Checklist />}
     </div>
   )
 }
@@ -248,7 +291,7 @@ function Readiness({ items }: { items: ReadyItem[] }) {
 }
 
 // ── the sol's events (IST) and notes ────────────────────────────────
-function Events({ sol, events, onAdded }: { sol: number; events: MissionEvent[]; onAdded: () => void }) {
+function Events({ sol, events, onAdded, readOnly = false }: { sol: number; events: MissionEvent[]; onAdded: () => void; readOnly?: boolean }) {
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const add = async (e: FormEvent) => {
@@ -262,10 +305,12 @@ function Events({ sol, events, onAdded }: { sol: number; events: MissionEvent[];
     : e.kind.startsWith('alarm') ? (e.severity === 'warning' || e.severity === 'emergency' ? 'c' : 'w') : ''
   return (
     <Panel title={`SOL ${sol} EVENTS`} icon={<ScrollText size={16} />} right={<span className="muted">times in IST</span>}>
-      <form className="mnote" onSubmit={add}>
-        <input value={text} onChange={e => setText(e.target.value)} placeholder="Add to the mission log (e.g. crew wake · lights on)" maxLength={500} />
-        <button className="mbtn" disabled={busy || !text.trim()}><Send size={13} /></button>
-      </form>
+      {!readOnly && (
+        <form className="mnote" onSubmit={add}>
+          <input value={text} onChange={e => setText(e.target.value)} placeholder="Add to the mission log (e.g. crew wake · lights on)" maxLength={500} />
+          <button className="mbtn" disabled={busy || !text.trim()}><Send size={13} /></button>
+        </form>
+      )}
       <div className="mevents">
         {events.slice(0, 40).map((e, i) => (
           <div key={i}>

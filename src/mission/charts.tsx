@@ -30,8 +30,8 @@ function segments<T extends (number | null)[]>(pts: T[], gap: number): T[][] {
 }
 
 // ── the whole mission for one measurement ───────────────────────────
-export function TimelineChart({ points, sols, nowH, start, unit, dp, limits = [], label }: {
-  points: [number, number | null, number, number][]; sols: number; nowH: number; start: number
+export function TimelineChart({ points, sols, nowH, start, unit, dp, limits = [], label, ended = false }: {
+  points: [number, number | null, number, number][]; sols: number; nowH: number; start: number; ended?: boolean
   unit: string; dp: number; limits?: { v: number; label: string; tone: 'warn' | 'crit' }[]; label: string
 }) {
   const W = 1000, H = 260, L = 52, R = 12, T = 12, B = 44, pw = W - L - R, ph = H - T - B
@@ -94,7 +94,7 @@ export function TimelineChart({ points, sols, nowH, start, unit, dp, limits = []
       {nowH >= 0 && nowH <= sols * 24 && (
         <g>
           <line x1={x(nowH)} x2={x(nowH)} y1={T} y2={T + ph} stroke="#ffc26b" strokeWidth="1.5" />
-          <text x={Math.min(x(nowH) + 6, W - 110)} y={T + 12} fill="#ffc26b" fontSize="11" fontWeight="700">NOW {istTime(Date.now(), false)} IST</text>
+          <text x={Math.min(x(nowH) + 6, W - 110)} y={T + 12} fill="#ffc26b" fontSize="11" fontWeight="700">{ended ? `ENDED ${istTime((start + nowH * 3600) * 1000, false)} IST` : `NOW ${istTime(Date.now(), false)} IST`}</text>
         </g>
       )}
       {!good.length && <text x={L + pw / 2} y={T + ph / 2} textAnchor="middle" fill={MUTED} fontSize="13">no {label} readings in this mission yet</text>}

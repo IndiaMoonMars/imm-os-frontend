@@ -7,6 +7,11 @@ import { authFetch } from '../auth'
 export interface Mission {
   id: number; name: string; start: number; end: number; sols: number; crew: number | null; notes: string
   ended_at: number | null; created_by: string | null; start_ist: string; end_ist: string
+  /** '' | 'restarted' | 'test' | 'aborted': where the mission is listed. Nothing is ever deleted. */
+  label: string
+}
+export interface HistoryItem extends Mission {
+  status: string; current: boolean; sol?: number; phase: MissionClock['phase']; archived_sols: number; readings: number
 }
 export interface MissionClock {
   phase: 'none' | 'pre' | 'active' | 'complete'
@@ -34,7 +39,7 @@ export interface Overview { mission: Mission; clock: MissionClock; sols: SolCard
 export interface Dose { per_sol: Record<string, number | null>; total_usv: number; points: [number, number][] }
 export interface Timeline {
   measurement: string; label: string; unit: string; dp: number; source: string | null
-  points: [number, number | null, number, number][]; now_h: number; sols: number
+  points: [number, number | null, number, number][]; now_h: number; sols: number; ended?: boolean
 }
 export interface Overlay { measurement: string; label: string; unit: string; dp: number; sols: Record<string, [number, number | null][]> }
 export interface HealthGrid {
@@ -103,8 +108,18 @@ export function dhms(s: number): string {
 /** The mission clock at `nowMs`, from the last poll (it ticks locally between polls). */
 export function clockAt(state: MissionState | null, nowMs: number): MissionClock {
   const m = state?.mission
+  return missionClock(m ?? null, nowMs)
+}
+
+/** A false start can be aborted until an hour into Sol 1 (backend: mission.abortable). */
+export const ABORT_WINDOW_S = 3600
+export const abortable = (m: Mission, nowMs: number) =>
+  !m.label && (m.ended_at == null || m.ended_at > nowMs / 1000) && nowMs / 1000 < m.start + ABORT_WINDOW_S
+
+export function missionClock(m: Mission | null, nowMs: number): MissionClock {
   if (!m) return { phase: 'none' }
   const now = nowMs / 1000
+  if (m.ended_at != null && m.ended_at <= m.start && now >= m.ended_at) return { phase: 'complete', sol: 0, met_s: 0, progress: 0 }
   if (now < m.start) return { phase: 'pre', sol: 0, t_minus_s: m.start - now, progress: 0 }
   const end = m.ended_at ? Math.min(m.end, m.ended_at) : m.end
   if (now >= end) return { phase: 'complete', sol: Math.min(Math.floor((end - 1 - m.start) / 86400) + 1, m.sols), met_s: end - m.start, progress: 1 }
@@ -118,7 +133,7 @@ export function clockLabel(c: MissionClock): { label: string; value: string } {
   switch (c.phase) {
     case 'active': return { label: 'MISSION TIME', value: `SOL ${c.sol} · ${hms(c.sol_elapsed_s ?? 0)}` }
     case 'pre': return { label: 'SOL 1 STARTS IN', value: `T− ${dhms(c.t_minus_s ?? 0)}` }
-    case 'complete': return { label: 'MISSION', value: `COMPLETE · ${c.sol} SOL${c.sol === 1 ? '' : 'S'}` }
+    case 'complete': return { label: 'MISSION', value: c.sol ? `COMPLETE · ${c.sol} SOL${c.sol === 1 ? '' : 'S'}` : 'ENDED BEFORE SOL 1' }
     default: return { label: 'MISSION', value: 'NOT STARTED' }
   }
 }
