@@ -6,13 +6,9 @@ import {
   Zap, 
   MessageSquare, 
   ChevronRight, 
-  RefreshCcw,
-  ShieldCheck,
-  Cpu
+  RefreshCcw
 } from 'lucide-react';
 import { 
-  LineChart, 
-  Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -21,6 +17,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
+import { authFetch, currentUser } from './auth'
 
 interface AiInsight {
   id: number;
@@ -28,7 +25,7 @@ interface AiInsight {
   insight_type: string;
   severity: string;
   summary: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
   created_at: string;
 }
 
@@ -73,14 +70,17 @@ const AiDashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // scroll only the chat pane, not the whole page
+    const end = chatEndRef.current;
+    const pane = end?.parentElement;
+    if (end && pane) pane.scrollTo({ top: pane.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
   const fetchInsights = async () => {
     try {
       // In a real app, we'd have a specific GET endpoint for insights
       // For now, we simulate fetching from the Mission Assistant's broader context
-      const res = await fetch('/astra/health'); // Just to check connectivity
+      await authFetch('/astra/health'); // Just to check connectivity
       // Mock data if API is still warming up in docker
       setInsights([
         { 
@@ -123,10 +123,10 @@ const AiDashboard: React.FC = () => {
     setIsTyping(true);
 
     try {
-      const response = await fetch('/astra/query', {
+      const response = await authFetch('/astra/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ crew_id: 'COMMANDER', query: input })
+        body: JSON.stringify({ crew_id: currentUser(), query: input })
       });
       const data = await response.json();
       
@@ -148,19 +148,12 @@ const AiDashboard: React.FC = () => {
   };
 
   const st = {
-    wrap: { 
-      padding: '24px', 
-      color: '#e2e8f0', 
-      background: '#0a0f1e', 
-      minHeight: '100vh', 
-      fontFamily: "'Inter', sans-serif",
-      boxSizing: 'border-box'
-    } as React.CSSProperties,
+    wrap: { color: '#dfe7fb' } as React.CSSProperties,
     header: { 
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'space-between', 
-      marginBottom: '32px' 
+      marginBottom: '20px' 
     } as React.CSSProperties,
     headerLeft: {
       display: 'flex',
@@ -267,9 +260,9 @@ const AiDashboard: React.FC = () => {
     } as React.CSSProperties,
     input: { 
       width: '100%', 
-      background: '#0a0f1e', 
+      background: 'transparent', 
       border: '1px solid rgba(34, 211, 238, 0.25)', 
-      borderRadius: '10px', 
+      borderRadius: '16px', 
       padding: '12px 48px 12px 16px', 
       color: '#e2e8f0', 
       fontSize: '14px', 
@@ -284,7 +277,7 @@ const AiDashboard: React.FC = () => {
       background: 'transparent',
       border: 'none',
       cursor: 'pointer',
-      color: '#22d3ee',
+      color: '#818cf8',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -324,7 +317,7 @@ const AiDashboard: React.FC = () => {
       fontSize: '10px',
       fontWeight: 600,
       background: 'rgba(34, 211, 238, 0.08)',
-      color: '#22d3ee',
+      color: '#818cf8',
       border: '1px solid rgba(34, 211, 238, 0.2)',
       borderRadius: '4px',
       padding: '4px 8px',
@@ -361,7 +354,7 @@ const AiDashboard: React.FC = () => {
     } as React.CSSProperties,
     insightCard: { 
       padding: '14px 16px', 
-      background: '#0a0f1e', 
+      background: 'transparent', 
       border: '1px solid rgba(34, 211, 238, 0.06)', 
       borderRadius: '12px', 
       display: 'flex', 
@@ -371,7 +364,7 @@ const AiDashboard: React.FC = () => {
     } as React.CSSProperties,
     actionCard: { 
       padding: '14px 16px', 
-      background: '#0a0f1e', 
+      background: 'transparent', 
       border: '1px solid rgba(168, 85, 247, 0.15)', 
       borderRadius: '12px', 
       marginBottom: '16px' 
@@ -383,7 +376,7 @@ const AiDashboard: React.FC = () => {
       padding: '10px', 
       borderRadius: '6px', 
       marginBottom: '10px', 
-      color: '#22d3ee', 
+      color: '#818cf8', 
       border: '1px solid rgba(34, 211, 238, 0.08)', 
       overflowX: 'auto' as const 
     } as React.CSSProperties,
@@ -414,24 +407,16 @@ const AiDashboard: React.FC = () => {
       width: '10px',
       height: '10px',
       borderRadius: '50%',
-      background: '#22d3ee',
-      boxShadow: '0 0 10px #22d3ee'
+      background: '#818cf8',
+      boxShadow: '0 0 10px #818cf8'
     } as React.CSSProperties
   };
 
   return (
     <div style={st.wrap}>
-      {/* Header bar */}
+      {/* Status bar (title is in the tab hero) */}
       <div style={st.header}>
-        <div style={st.headerLeft}>
-          <div style={st.logoBox}>
-            <Cpu className="w-8 h-8 text-cyan-400" style={{ color: '#22d3ee' }} />
-          </div>
-          <div>
-            <h1 style={st.title}>AI & Autonomous Operations</h1>
-            <p style={st.subtitle}>Mission Intelligence Hub • Astra v1.1.0</p>
-          </div>
-        </div>
+        <p style={st.subtitle}>Mission Intelligence Hub • Astra v1.1.0</p>
         <div>
           <div style={st.statusBadge}>
             <div style={st.statusDot} />
@@ -446,7 +431,7 @@ const AiDashboard: React.FC = () => {
         {/* Left Column: AI Assistant Chat */}
         <div style={st.chatColumn}>
           <div style={st.chatHeader}>
-            <MessageSquare className="w-5 h-5" style={{ color: '#22d3ee' }} />
+            <MessageSquare className="w-5 h-5" style={{ color: '#818cf8' }} />
             <h2 style={st.chatHeaderTitle}>Astra Assistant</h2>
           </div>
           
@@ -455,8 +440,8 @@ const AiDashboard: React.FC = () => {
               <div key={i} style={st.messageRow(msg.role === 'crew')}>
                 <div style={st.messageBubble(msg.role === 'crew')}>
                   <div style={st.messageMeta}>
-                    {msg.role === 'astra' && <Bot className="w-4 h-4" style={{ color: '#22d3ee' }} />}
-                    <span style={{ color: msg.role === 'crew' ? '#22d3ee' : '#94a3b8' }}>
+                    {msg.role === 'astra' && <Bot className="w-4 h-4" style={{ color: '#818cf8' }} />}
+                    <span style={{ color: msg.role === 'crew' ? '#818cf8' : '#94a3b8' }}>
                       {msg.role === 'astra' ? 'ASTRA' : 'CREW'}
                     </span>
                     <span style={{ marginLeft: 'auto', fontSize: '9px', opacity: 0.6 }}>{msg.timestamp}</span>
@@ -545,7 +530,7 @@ const AiDashboard: React.FC = () => {
             <div style={st.heartbeatCard}>
               <div style={st.glowingPulse} />
               <div style={{ position: 'relative', marginBottom: '16px' }}>
-                <Bot className="w-12 h-12" style={{ color: '#22d3ee' }} />
+                <Bot className="w-12 h-12" style={{ color: '#818cf8' }} />
               </div>
               <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 6px 0', color: '#fff' }}>Astra Core Online</h3>
               <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, maxWidth: '220px', lineHeight: 1.4 }}>
@@ -553,12 +538,12 @@ const AiDashboard: React.FC = () => {
               </p>
               <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#22d3ee' }}>98%</div>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#818cf8' }}>98%</div>
                   <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Confidence</div>
                 </div>
                 <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)' }} />
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#22d3ee' }}>1.2s</div>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#818cf8' }}>1.2s</div>
                   <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Latency</div>
                 </div>
               </div>
@@ -577,7 +562,7 @@ const AiDashboard: React.FC = () => {
               {insights.map(insight => (
                 <div key={insight.id} style={st.insightCard}>
                   <div style={{ padding: '8px', background: insight.severity === 'warning' ? 'rgba(251, 191, 36, 0.1)' : 'rgba(34, 211, 238, 0.1)', borderRadius: '8px', display: 'flex' }}>
-                    <Activity className="w-4 h-4" style={{ color: insight.severity === 'warning' ? '#fbbf24' : '#22d3ee' }} />
+                    <Activity className="w-4 h-4" style={{ color: insight.severity === 'warning' ? '#fbbf24' : '#818cf8' }} />
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
